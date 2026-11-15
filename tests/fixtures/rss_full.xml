@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:content="http://purl.org/rss/1.0/modules/content/" xmlns:dc="http://purl.org/dc/elements/1.1/">
+<channel>
+  <title>Test Space News</title>
+  <link>https://example.com/</link>
+  <item>
+    <title>NASA&#8217;s Artemis &amp; SpaceX update</title>
+    <link>https://www.example.com/artemis-update/?utm_source=rss&amp;utm_medium=rss</link>
+    <guid isPermaLink="false">https://example.com/?p=101</guid>
+    <pubDate>Fri, 13 Nov 2026 10:00:00 +0300</pubDate>
+    <dc:creator>Jane Doe</dc:creator>
+    <category>Artemis</category>
+    <description><![CDATA[<p>Short teaser about Artemis&#8230;</p>]]></description>
+    <content:encoded><![CDATA[<p>First paragraph of the <b>full</b> article. It is long enough to be more than five hundred characters when repeated. Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.</p><p>Second paragraph. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.</p><script>alert(1)</script><p>The post NASA's Artemis appeared first on Test Space News.</p>]]></content:encoded>
+  </item>
+  <item>
+    <title>Second story</title>
+    <link>https://example.com/second</link>
+    <pubDate>Thu, 12 Nov 2026 08:30:00 GMT</pubDate>
+    <description>Plain description only</description>
+  </item>
+</channel>
+</rss>

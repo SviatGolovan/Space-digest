@@ -1,0 +1,584 @@
+{% import "_layout.html" as L %}
+<!DOCTYPE html>
+<html lang="ru" class="{{ 'fx' if fx_on }}" data-theme="{{ 'light' if theme == 'system' else theme }}" data-theme-pref="{{ theme }}">
+<head>
+{{ L.head("Дедупликатор") }}
+</head>
+<body>
+<div class="layout">
+
+{{ L.header("dedup", "🧬") }}
+
+  <!-- Sidebar: конфигурация -->
+  <aside class="sidebar">
+
+    <!-- Источник: недельная накопительная база -->
+    <div class="card">
+      <div class="card-title">Недельная база (Пн–Вс)</div>
+      <div class="tg-help" style="margin-top:0">Эталон для сравнения: всё, что в выгрузке
+        совпадёт с отмеченными неделями, будет <b>убрано из выгрузки</b>. Сама база
+        не изменяется и в результат не попадает.</div>
+      <div class="tg-channels" id="weeks-list" style="max-height:170px">
+        <div class="tg-help">Загрузка недель…</div>
+      </div>
+      <div style="margin-top:8px;display:flex;gap:14px;align-items:center">
+        <button class="mini-btn" onclick="loadWeeks()">↻ Обновить список</button>
+        <a class="mini-btn" href="/settings#data" style="text-decoration:none">Управлять базой →</a>
+      </div>
+    </div>
+
+    <!-- Источник 1: парсер сайтов -->
+    <div class="card">
+      <div class="card-title"><span class="step">1</span> Новости с сайтов</div>
+      <div class="toggle-row">
+        <div class="toggle-label">Использовать выгрузку
+          <small>результат запуска парсера сайтов</small>
+        </div>
+        <label class="switch"><input type="checkbox" id="use-parser"><span class="slider"></span></label>
+      </div>
+      <select id="job-select" disabled><option>— нет выгрузок —</option></select>
+      <div style="margin-top:8px"><button class="mini-btn" onclick="loadJobs()">↻ Обновить список</button></div>
+    </div>
+
+    <!-- Источник 2: Telegram -->
+    <div class="card">
+      <div class="card-title"><span class="step">2</span> Новости из Telegram</div>
+      <div class="toggle-row">
+        <div class="toggle-label">Использовать сбор
+          <small>результат сбора на странице Telegram</small>
+        </div>
+        <label class="switch"><input type="checkbox" id="use-tg"><span class="slider"></span></label>
+      </div>
+      <select id="tg-select" disabled><option>— нет сборов —</option></select>
+      <div style="margin-top:8px"><button class="mini-btn" onclick="loadTgJobs()">↻ Обновить список</button></div>
+    </div>
+
+    <!-- Источник 3: CSV -->
+    <div class="card">
+      <div class="card-title"><span class="step">3</span> Сторонние CSV-файлы</div>
+      <div class="upload-zone" id="upload-zone">
+        Нажмите, чтобы выбрать CSV<br><small>4 или 5 столбцов · UTF-8</small>
+      </div>
+      <input type="file" id="file-input" accept=".csv,text/csv" multiple style="display:none">
+      <div class="file-list" id="file-list"></div>
+    </div>
+
+    <!-- Параметры -->
+    <div class="card">
+      <div class="card-title"><span class="step">4</span> Параметры сравнения</div>
+
+      <div class="toggle-row">
+        <div class="toggle-label">Перекрёстная сверка
+          <small>искать дубли между всеми наборами вместе (иначе — каждый отдельно)</small>
+        </div>
+        <label class="switch"><input type="checkbox" id="cross" checked><span class="slider"></span></label>
+      </div>
+
+      <div class="toggle-row">
+        <div class="toggle-label">Файл — архив
+          <small>при совпадении оставлять запись из файла</small>
+        </div>
+        <label class="switch"><input type="checkbox" id="prefer-file" checked><span class="slider"></span></label>
+      </div>
+
+      <div class="hint" style="margin-top:6px">При совпадении <b>сайты ↔ Telegram</b> остаётся запись <b>с сайта</b> (приоритет выше).</div>
+
+      <div style="margin-top:14px">
+        <div class="thr-head"><span>Порог близости</span><span class="thr-val" id="thr-val">0.82</span></div>
+        <input type="range" id="threshold" min="0.60" max="0.95" step="0.01" value="0.82" oninput="document.getElementById('thr-val').textContent=(+this.value).toFixed(2)">
+        <div class="hint">Выше порог → строже (дублями считаются только очень похожие). 0.80–0.85 — хорошая отправная точка для эмбеддинг-модели.</div>
+      </div>
+
+      <div class="toggle-row" style="margin-top:14px;border-top:1px solid var(--border);padding-top:14px">
+        <div class="toggle-label">Перевод на русский
+          <small>результат переводится после очистки</small>
+        </div>
+        <label class="switch"><input type="checkbox" id="translate"><span class="slider"></span></label>
+      </div>
+      <div class="hint" id="tr-hint" style="margin-top:0">Сервис перевода выбирается в <a href="/settings#translation">Настройках</a>.</div>
+    </div>
+
+    <button class="btn-run" id="btn-run" onclick="runDedup()">Найти и убрать дубли</button>
+  </aside>
+
+  <!-- Main: результаты -->
+  <main class="main">
+
+    <div class="stats-bar">
+      <div class="stat"><div class="stat-val" id="st-in">—</div><div class="stat-lbl">Новостей на входе</div></div>
+      <div class="stat"><div class="stat-val green" id="st-kept">—</div><div class="stat-lbl">Оставлено (уникальных)</div></div>
+      <div class="stat"><div class="stat-val amber" id="st-removed">—</div><div class="stat-lbl">Дублей убрано</div></div>
+      <div class="stat"><div class="stat-val small" id="st-backend">—</div><div class="stat-lbl">Движок эмбеддингов</div></div>
+    </div>
+
+    <div id="progress-wrap">
+      <div class="prog-header"><span id="prog-label">Обработка...</span><span id="prog-pct" style="font-family:var(--mono);font-size:12px">0%</span></div>
+      <div class="prog-bar-bg"><div class="prog-bar-fill" id="prog-bar"></div></div>
+      <div id="prog-log"></div>
+    </div>
+
+    <!-- Аналитика -->
+    <div class="analytics" id="analytics"></div>
+
+    <div class="tabs">
+      <div class="tab active" id="tab-kept" onclick="switchTab('kept')">✓ Очищенные<span class="badge" id="badge-kept">0</span></div>
+      <div class="tab removed" id="tab-removed" onclick="switchTab('removed')">Убранные дубли<span class="badge" id="badge-removed">0</span></div>
+    </div>
+
+    <div class="actions-bar">
+      <input class="search-input" id="search" placeholder="Поиск по заголовку, источнику, тексту..." oninput="render()">
+      <div class="lang-switch" id="lang-switch" style="display:none">
+        <button id="lang-ru" class="active" onclick="setLang('ru')">Рус</button>
+        <button id="lang-orig" onclick="setLang('orig')">Ориг</button>
+      </div>
+      <div class="menu-wrap" id="dl-menu">
+        <button class="btn-csv" id="btn-csv" disabled onclick="toggleMenu('dl-menu',event)">Скачать ▾</button>
+        <div class="menu-pop">
+          <button onclick="downloadAs('csv')"><span class="mk">CSV</span> Таблица CSV</button>
+          <button onclick="downloadAs('xlsx')"><span class="mk">XLSX</span> Excel</button>
+          <button onclick="downloadAs('md')"><span class="mk">MD</span> Markdown-дайджест</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="table-wrap">
+      <div class="table-scroll">
+        <table>
+          <thead id="thead"></thead>
+          <tbody id="tbody">
+            <tr><td colspan="6">
+              <div class="empty">
+                <div class="empty-icon">🧬</div>
+                <div class="empty-title">Дедупликация ещё не запускалась</div>
+                <div class="empty-sub">Выберите выгрузку парсера и/или загрузите CSV, затем нажмите «Найти и убрать дубли»</div>
+              </div>
+            </td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<!-- Окно сравнения дубликатов -->
+<div class="cmp-overlay" id="cmp-overlay" onclick="closeCompare(event)">
+  <div class="cmp-modal" onclick="event.stopPropagation()">
+    <div class="cmp-head">
+      <span class="cmp-ttl">Сравнение дубликатов</span>
+      <span class="cmp-sim" id="cmp-sim">—</span>
+      <button class="cmp-x" onclick="closeCompare()" title="Закрыть">✕</button>
+    </div>
+    <div class="cmp-body" id="cmp-body"></div>
+    <div class="cmp-foot">Слева — новость, которую дедупликатор убрал. Справа — запись, оставленная как оригинал. Сверьте смысл сами.</div>
+  </div>
+</div>
+
+<script src="{{ url_for('static', filename='common.js') }}"></script>
+<script>
+let uploads   = [];      // [{upload_id, filename, count}]
+let dedupId   = null;
+let pollTimer = null;
+let resultKept = [], resultRemoved = [];
+let activeTab = 'kept';
+let viewLang  = 'ru';
+let isTranslated = false;
+
+
+function esc(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+
+// выбор поля с учётом языка
+function fld(a, name){
+  if(viewLang==='ru' && a && a[name+'_ru']) return a[name+'_ru'];
+  return (a && a[name]) || '';
+}
+function pillCls(kind){ return kind==='file'?'file':kind==='tg'?'tg':'parser'; }
+function saveUploads(){ try{ localStorage.setItem('dedup_uploads', JSON.stringify(uploads)); }catch(e){} }
+
+// ── список готовых выгрузок парсера ──
+async function loadJobs(){
+  const sel = document.getElementById('job-select');
+  try{
+    const res  = await fetch('/api/jobs/completed');
+    const jobs = await res.json();
+    if(!jobs.length){
+      sel.innerHTML = '<option value="">— нет выгрузок (запустите парсер) —</option>';
+      return;
+    }
+    sel.innerHTML = jobs.map(j=>
+      `<option value="${j.job_id}">${j.finished_at || '—'} · ${j.count} новостей</option>`
+    ).join('');
+  }catch(e){
+    sel.innerHTML = '<option value="">ошибка загрузки</option>';
+  }
+}
+loadJobs();
+
+async function loadWeeks(){
+  const el = document.getElementById('weeks-list');
+  try{
+    const weeks = await (await fetch('/api/weeks')).json();
+    if(!weeks.length){
+      el.innerHTML = '<div class="tg-help">Недель пока нет. На странице парсера или Telegram нажмите «В недельную базу».</div>';
+      return;
+    }
+    el.innerHTML = weeks.map(w=>
+      `<label class="tg-ch">
+        <input type="checkbox" class="week-check" value="${w.key}">
+        <span class="c-name">${escHtml(w.label)}</span>
+        <span class="c-badge" title="сайты / telegram">${w.sites}+${w.tg}</span>
+      </label>`).join('');
+  }catch(e){
+    el.innerHTML = '<div class="tg-help">Не удалось загрузить недели.</div>';
+  }
+}
+loadWeeks();
+
+async function loadTgJobs(){
+  const sel = document.getElementById('tg-select');
+  try{
+    const res  = await fetch('/api/tg/completed');
+    const jobs = await res.json();
+    if(!jobs.length){
+      sel.innerHTML = '<option value="">— нет сборов (соберите на стр. Telegram) —</option>';
+      return;
+    }
+    sel.innerHTML = jobs.map(j=>
+      `<option value="${j.job_id}">${j.finished_at || '—'} · ${j.count} постов</option>`
+    ).join('');
+  }catch(e){
+    sel.innerHTML = '<option value="">ошибка загрузки</option>';
+  }
+}
+loadTgJobs();
+
+document.getElementById('use-parser').addEventListener('change',function(){
+  document.getElementById('job-select').disabled = !this.checked;
+});
+document.getElementById('use-tg').addEventListener('change',function(){
+  document.getElementById('tg-select').disabled = !this.checked;
+});
+
+// ── загрузка CSV ──
+const fileInput = document.getElementById('file-input');
+document.getElementById('upload-zone').addEventListener('click',()=>fileInput.click());
+fileInput.addEventListener('change',async ()=>{
+  for(const file of fileInput.files){
+    const fd = new FormData(); fd.append('file',file);
+    const zone = document.getElementById('upload-zone');
+    zone.textContent = '⏳ Разбор '+file.name+'...';
+    try{
+      const res = await fetch('/api/dedup/upload',{method:'POST',body:fd});
+      const data = await res.json();
+      if(data.error){ toast('Ошибка: '+data.error,'error'); }
+      else{ uploads.push(data); renderFiles(); saveUploads(); toast(`Загружено: ${data.filename} (${data.count})`,'success'); }
+    }catch(e){ toast('Не удалось загрузить файл','error'); }
+    zone.innerHTML = 'Нажмите, чтобы выбрать CSV<br><small>4 или 5 столбцов · UTF-8</small>';
+  }
+  fileInput.value = '';
+});
+
+function renderFiles(){
+  const el = document.getElementById('file-list');
+  el.innerHTML = uploads.map((u,i)=>`
+    <div class="file-item">
+      <span class="fname" title="${esc(u.filename)}">📄 ${esc(u.filename)}</span>
+      <span class="fcount">${u.count}</span>
+      <span class="fx" onclick="removeFile(${i})" title="Убрать">✕</span>
+    </div>`).join('');
+}
+function removeFile(i){ uploads.splice(i,1); renderFiles(); saveUploads(); }
+
+// ── запуск дедупликации ──
+async function runDedup(){
+  const useParser = document.getElementById('use-parser').checked;
+  const jobId     = document.getElementById('job-select').value;
+  const useTg     = document.getElementById('use-tg').checked;
+  const tgId      = document.getElementById('tg-select').value;
+  const uploadIds = uploads.map(u=>u.upload_id);
+  const weekKeys  = [...document.querySelectorAll('.week-check:checked')].map(c=>c.value);
+
+  const hasParser = useParser && jobId;
+  const hasTg     = useTg && tgId;
+  if(!hasParser && !hasTg && uploadIds.length===0 && weekKeys.length===0){
+    toast('Отметьте неделю, выгрузку сайтов, сбор Telegram и/или CSV-файл','warn');
+    return;
+  }
+
+  const params = {
+    job_id:              hasParser ? jobId : null,
+    tg_job_id:           hasTg ? tgId : null,
+    upload_ids:          uploadIds,
+    week_keys:           weekKeys,
+    threshold:           parseFloat(document.getElementById('threshold').value),
+    cross_compare:       document.getElementById('cross').checked,
+    prefer_file_as_base: document.getElementById('prefer-file').checked,
+    translate:           document.getElementById('translate').checked,
+  };
+
+  const btn = document.getElementById('btn-run');
+  btn.disabled = true; btn.textContent = '⏳ Обработка...';
+  document.getElementById('btn-csv').disabled = true;
+  document.getElementById('progress-wrap').classList.add('active');
+  document.getElementById('prog-bar').style.width = '5%';
+  document.getElementById('prog-pct').textContent = '5%';
+  document.getElementById('prog-label').textContent = 'Запуск...';
+  document.getElementById('prog-log').innerHTML = '';
+  ['st-in','st-kept','st-removed','st-backend'].forEach(id=>document.getElementById(id).textContent='…');
+
+  const res  = await fetch('/api/dedup/run',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(params)});
+  const data = await res.json();
+  if(data.error){ toast('Ошибка: '+data.error,'error'); resetBtn(); return; }
+  dedupId = data.dedup_id;
+  localStorage.setItem('dedup_id', dedupId);   // запоминаем для истории
+  if(pollTimer) clearInterval(pollTimer);
+  pollTimer = setInterval(poll, 900);
+}
+
+function resetBtn(){
+  const btn = document.getElementById('btn-run');
+  btn.disabled = false; btn.textContent = 'Найти и убрать дубли';
+}
+
+async function poll(){
+  if(!dedupId) return;
+  const res  = await fetch('/api/dedup/'+dedupId);
+  const data = await res.json();
+
+  document.getElementById('prog-bar').style.width = data.progress+'%';
+  document.getElementById('prog-pct').textContent = data.progress+'%';
+
+  const logEl = document.getElementById('prog-log');
+  logEl.innerHTML = (data.log||[]).map(l=>{
+    if(l.includes('⚠')) return `<div class="warn">${esc(l)}</div>`;
+    if(l.includes('✗')) return `<div class="err">${esc(l)}</div>`;
+    return `<div>${esc(l)}</div>`;
+  }).join('');
+  logEl.scrollTop = logEl.scrollHeight;
+
+  if(data.status==='error'){
+    clearInterval(pollTimer);
+    document.getElementById('prog-label').textContent='✗ Ошибка';
+    resetBtn();
+    return;
+  }
+  if(data.status==='done'){
+    clearInterval(pollTimer);
+    document.getElementById('prog-label').textContent='Готово';
+    if(data.stats){
+      document.getElementById('st-in').textContent      = data.stats.total_in;
+      document.getElementById('st-kept').textContent    = data.stats.kept;
+      document.getElementById('st-removed').textContent = data.stats.removed;
+      document.getElementById('st-backend').textContent =
+        data.stats.backend==='sentence-transformers' ? 'нейросеть' :
+        data.stats.backend==='tfidf' ? 'TF-IDF (запас.)' : data.stats.backend;
+    }
+    const rr = await fetch('/api/dedup/'+dedupId+'/result');
+    const rd = await rr.json();
+    applyResult(rd);
+    resetBtn();
+  }
+}
+
+// Применение результата (используется при поллинге и при восстановлении)
+function applyResult(rd){
+  resultKept    = rd.kept    || [];
+  resultRemoved = rd.removed || [];
+  resultRemoved.forEach((r,i)=>{ r._ri = i; });
+  isTranslated  = !!rd.translated;
+  document.getElementById('badge-kept').textContent    = resultKept.length;
+  document.getElementById('badge-removed').textContent = resultRemoved.length;
+  document.getElementById('btn-csv').disabled = false;
+  applyLangVisibility();
+  Analytics.render('analytics', resultKept, {showDuplicates:true, removedCount:resultRemoved.length});
+  render();
+}
+
+function applyLangVisibility(){
+  const sw = document.getElementById('lang-switch');
+  sw.style.display = isTranslated ? 'flex' : 'none';
+  if(!isTranslated) viewLang = 'orig';
+  setLangButtons();
+}
+function setLangButtons(){
+  document.getElementById('lang-ru').classList.toggle('active', viewLang==='ru');
+  document.getElementById('lang-orig').classList.toggle('active', viewLang==='orig');
+}
+function setLang(l){ viewLang=l; setLangButtons(); render(); }
+
+// ── вкладки ──
+function switchTab(tab){
+  activeTab = tab;
+  document.getElementById('tab-kept').classList.toggle('active', tab==='kept');
+  document.getElementById('tab-removed').classList.toggle('active', tab==='removed');
+  document.getElementById('search').value = '';
+  render();
+}
+
+function simClass(s){ return s>=0.9?'hi':(s>=0.8?'mid':'lo'); }
+
+// ── Окно сравнения дубликатов ──
+function dfld(d, name){
+  if(viewLang==='ru' && d && d[name+'_ru']) return d[name+'_ru'];
+  return (d && d[name]) || '';
+}
+function cmpCol(kind, src, label, date, title, summary, url){
+  return `
+    <div class="cmp-col cmp-${kind}">
+      <span class="cmp-tag">${kind==='removed'?'Убрано':'✓ Оставлено'}</span>
+      <div class="cmp-meta">
+        <span class="src-pill">${esc(src||'—')}</span>
+        ${label?`<span class="set-pill ${label.indexOf('Файл')>=0?'file':label.indexOf('Telegram')>=0?'tg':'parser'}">${esc(label)}</span>`:''}
+        <span class="cmp-date">${esc(date||'—')}</span>
+      </div>
+      <h3>${esc(title||'—')}</h3>
+      <div class="cmp-summ">${esc(summary||'(текст отсутствует)')}</div>
+      ${url?`<a class="cmp-link" href="${esc(url)}" target="_blank" rel="noreferrer">${esc(url)}</a>`:''}
+    </div>`;
+}
+function openCompare(i){
+  const a = resultRemoved[i]; if(!a) return;
+  const d = a.duplicate_of||{};
+  const s = a.similarity||0;
+  const sim = document.getElementById('cmp-sim');
+  sim.textContent = 'похожесть ' + (s*100).toFixed(0) + '%';
+  sim.className = 'cmp-sim ' + simClass(s);
+  document.getElementById('cmp-body').innerHTML =
+    cmpCol('removed', a.source_name, a.set_label, a.published_at, fld(a,'title'), fld(a,'summary'), a.url) +
+    cmpCol('kept',    d.source_name, d.set_label, d.published_at, dfld(d,'title'), dfld(d,'summary'), d.url);
+  document.getElementById('cmp-overlay').classList.add('open');
+}
+function closeCompare(ev){
+  if(ev && ev.type==='click' && ev.target.id!=='cmp-overlay') return;
+  document.getElementById('cmp-overlay').classList.remove('open');
+}
+document.addEventListener('keydown', e=>{ if(e.key==='Escape') closeCompare(); });
+
+// ── отрисовка таблицы ──
+function render(){
+  const q = document.getElementById('search').value.toLowerCase();
+  const thead = document.getElementById('thead');
+  const tbody = document.getElementById('tbody');
+
+  if(activeTab==='kept'){
+    thead.innerHTML = '<tr><th>Дата</th><th>Источник</th><th>Заголовок</th><th>Новость</th><th>Ссылка</th></tr>';
+    let rows = resultKept;
+    if(q) rows = rows.filter(a=>fld(a,'title').toLowerCase().includes(q)||(a.source_name||'').toLowerCase().includes(q)||fld(a,'summary').toLowerCase().includes(q));
+    if(!rows.length){ tbody.innerHTML = emptyRow(5,'🔭','Пусто','Уникальных новостей нет или фильтр ничего не нашёл'); return; }
+    tbody.innerHTML = rows.map(a=>`
+      <tr>
+        <td class="td-date">${esc(a.published_at||'—')}</td>
+        <td><span class="src-pill">${esc(a.source_name)}</span>
+            <span class="set-pill ${pillCls(a.set_kind)}">${esc(a.set_label||'')}</span></td>
+        <td class="td-title"><a href="${esc(a.url)}" target="_blank" rel="noreferrer">${esc(fld(a,'title'))}</a></td>
+        <td class="td-summ">${esc(fld(a,'summary'))}</td>
+        <td class="td-link"><a href="${esc(a.url)}" target="_blank" rel="noreferrer">${esc((a.url||'').length>50?a.url.slice(0,50)+'…':(a.url||''))}</a></td>
+      </tr>`).join('');
+  }else{
+    thead.innerHTML = '<tr><th>Дата</th><th>Источник</th><th>Убранный заголовок</th><th>Близость</th><th>Дубль чего (оставлено)</th></tr>';
+    let rows = resultRemoved;
+    if(q) rows = rows.filter(a=>fld(a,'title').toLowerCase().includes(q)||(a.source_name||'').toLowerCase().includes(q)||((a.duplicate_of||{}).title||'').toLowerCase().includes(q));
+    if(!rows.length){ tbody.innerHTML = emptyRow(5,'✨','Дублей нет','Все новости уникальны при текущем пороге'); return; }
+    tbody.innerHTML = rows.map(a=>{
+      const d = a.duplicate_of||{};
+      const s = a.similarity||0;
+      const dTitle = (viewLang==='ru' && d.title_ru) ? d.title_ru : (d.title||'');
+      return `
+      <tr class="cmp-row" title="Нажмите, чтобы сравнить оба источника" onclick="openCompare(${a._ri})">
+        <td class="td-date">${esc(a.published_at||'—')}</td>
+        <td><span class="src-pill">${esc(a.source_name)}</span>
+            <span class="set-pill ${pillCls(a.set_kind)}">${esc(a.set_label||'')}</span></td>
+        <td class="td-title"><a href="${esc(a.url)}" target="_blank" rel="noreferrer" onclick="event.stopPropagation()">${esc(fld(a,'title'))}</a></td>
+        <td><span class="sim ${simClass(s)}">${(s*100).toFixed(0)}%</span> <span class="cmp-hint">сравнить →</span></td>
+        <td><div class="dup-of"><b>${esc(dTitle)}</b><br>${esc(d.source_name||'')} · ${esc(d.set_label||'')}</div></td>
+      </tr>`;
+    }).join('');
+  }
+}
+
+function emptyRow(cols,icon,title,sub){
+  return `<tr><td colspan="${cols}"><div class="empty"><div class="empty-icon">${icon}</div><div class="empty-title">${title}</div><div class="empty-sub">${sub}</div></div></td></tr>`;
+}
+
+function downloadAs(fmt){
+  if(!dedupId){ toast('Сначала запустите дедупликацию','warn'); return; }
+  document.getElementById('dl-menu').classList.remove('open');
+  const which = activeTab==='removed' ? 'removed' : 'kept';
+  downloadUrl('/api/dedup/'+dedupId+'/export?which='+which+'&fmt='+fmt+'&lang='+viewLang,
+              'файл '+fmt.toUpperCase()+' ('+(which==='removed'?'дубли':'очищенные')+')');
+}
+
+// ── Открытие прогона из истории ──
+async function openDedup(id){
+  try{
+    const sres = await fetch('/api/dedup/'+id);
+    if(!sres.ok){ toast('Прогон не найден','error'); return; }
+    const data = await sres.json();
+    dedupId = id;
+    localStorage.setItem('dedup_id', id);
+    if(data.stats){
+      document.getElementById('st-in').textContent      = data.stats.total_in;
+      document.getElementById('st-kept').textContent    = data.stats.kept;
+      document.getElementById('st-removed').textContent = data.stats.removed;
+      document.getElementById('st-backend').textContent =
+        data.stats.backend==='sentence-transformers' ? 'нейросеть' :
+        data.stats.backend==='tfidf' ? 'TF-IDF (запас.)' : data.stats.backend;
+    }
+    const rr = await fetch('/api/dedup/'+id+'/result');
+    if(rr.ok){ applyResult(await rr.json()); toast('Прогон открыт','success'); }
+  }catch(e){ toast('Не удалось открыть','error'); }
+}
+
+// ── Восстановление при возврате на страницу ──
+function restoreUploads(){
+  try{
+    const saved = JSON.parse(localStorage.getItem('dedup_uploads')||'[]');
+    if(Array.isArray(saved) && saved.length){ uploads = saved; renderFiles(); }
+  }catch(e){}
+}
+async function applyPrefs(){
+  const p = await Prefs.get();
+  if(p.dedup){
+    document.getElementById('threshold').value = p.dedup.threshold;
+    document.getElementById('thr-val').textContent = (+p.dedup.threshold).toFixed(2);
+    document.getElementById('cross').checked = !!p.dedup.cross_compare;
+    document.getElementById('prefer-file').checked = !!p.dedup.prefer_file_as_base;
+  }
+  if(p.translation){
+    document.getElementById('translate').checked = !!p.translation.default_on;
+    document.getElementById('tr-hint').innerHTML = 'Сервис: <b>'+(p.translation.provider==='deepl'&&p.translation.has_deepl_key?'DeepL':'Google (бесплатно)')+'</b> · <a href="/settings#translation">изменить</a>';
+  }
+}
+async function restoreLast(){
+  History.init('dedup', {dedup: openDedup});
+  applyPrefs();
+  restoreUploads();
+  const params = new URLSearchParams(location.search);
+  const openId = params.get('open_dedup');
+  if(openId){ history.replaceState({},'','/dedup'); await openDedup(openId); return; }
+
+  const saved = localStorage.getItem('dedup_id');
+  if(!saved) return;
+  try{
+    const res = await fetch('/api/dedup/'+saved);
+    if(!res.ok){ localStorage.removeItem('dedup_id'); return; }
+    const data = await res.json();
+    if(data.status==='done'){
+      dedupId = saved;
+      if(data.stats){
+        document.getElementById('st-in').textContent      = data.stats.total_in;
+        document.getElementById('st-kept').textContent    = data.stats.kept;
+        document.getElementById('st-removed').textContent = data.stats.removed;
+        document.getElementById('st-backend').textContent =
+          data.stats.backend==='sentence-transformers' ? 'нейросеть' :
+          data.stats.backend==='tfidf' ? 'TF-IDF (запас.)' : data.stats.backend;
+      }
+      const rr = await fetch('/api/dedup/'+saved+'/result');
+      if(rr.ok) applyResult(await rr.json());
+    }
+  }catch(e){ /* сервер перезапущен — игнорируем */ }
+}
+restoreLast();
+</script>
+</body>
+</html>

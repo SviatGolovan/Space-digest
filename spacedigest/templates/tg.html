@@ -1,0 +1,426 @@
+{% import "_layout.html" as L %}
+<!DOCTYPE html>
+<html lang="ru" class="{{ 'fx' if fx_on }}" data-theme="{{ 'light' if theme == 'system' else theme }}" data-theme-pref="{{ theme }}">
+<head>
+{{ L.head("Telegram") }}
+</head>
+<body>
+<div class="layout">
+
+{{ L.header("tg", "✈️") }}
+
+  <aside class="sidebar">
+
+    <!-- Статус -->
+    <div class="card">
+      <div class="card-title">Telegram</div>
+      <div class="tg-status" id="tg-status" style="flex-direction:column;gap:6px;margin-top:0">
+        <span><span class="tg-dot off"></span>Проверка подключения…</span>
+      </div>
+      <div style="font-size:11px;color:var(--muted);margin-top:8px">Постов в базе:
+        <b id="tg-db-total" style="color:var(--accent)">—</b></div>
+      <div style="font-size:11px;color:var(--muted)">Последнее сообщение:
+        <b id="tg-last-date" style="color:var(--text)">—</b></div>
+      <div style="font-size:11px;color:var(--muted)" id="tg-auto-line"></div>
+      <div class="tg-help" id="tg-setup-hint" style="display:none"></div>
+    </div>
+
+    <!-- Диапазон дат -->
+    <div class="card">
+      <div class="card-title">Диапазон дат</div>
+      <div class="date-row">
+        <label class="field">От <input type="date" id="date-from"></label>
+        <label class="field">До <input type="date" id="date-to"></label>
+      </div>
+    </div>
+
+    <!-- Каналы -->
+    <div class="card" style="flex:1;min-height:0;display:flex;flex-direction:column">
+      <div class="card-title">Каналы</div>
+      <div class="sources-header">
+        <div class="select-btns">
+          <button class="link-btn" onclick="selectAllCh(true)">Все</button>
+          <button class="link-btn" onclick="selectAllCh(false)">Снять</button>
+        </div>
+        <a class="src-add-btn" href="/settings#telegram" title="Добавить или убрать каналы">Управлять →</a>
+        <span class="src-count" id="ch-count">0 / 0</span>
+      </div>
+      <div class="tg-channels" id="tg-channels">
+        <div class="tg-help">Загрузка каналов…</div>
+      </div>
+      <div class="tg-help">Ничего не отмечено = берём все каналы.</div>
+    </div>
+
+    <!-- Перевод -->
+    <div class="card">
+      <div class="card-title">Перевод</div>
+      <div class="toggle-row">
+        <div class="toggle-label">Переводить на русский
+          <small>после загрузки посты переводятся</small>
+        </div>
+        <label class="switch"><input type="checkbox" id="translate"><span class="slider"></span></label>
+      </div>
+      <div class="hint" id="tr-hint" style="margin-top:0">Сервис перевода выбирается в <a href="/settings#translation">Настройках</a>.</div>
+    </div>
+
+    <button class="btn-secondary" id="btn-refresh" onclick="triggerRefresh(this)" style="margin-top:0">Обновить из Telegram</button>
+    <button class="btn-fetch" id="btn-fetch" onclick="startFetch()">Загрузить из базы</button>
+  </aside>
+
+  <main class="main">
+
+    <div class="stats-bar">
+      <div class="stat"><div class="stat-val" id="stat-total">—</div><div class="stat-lbl">Постов загружено</div></div>
+      <div class="stat"><div class="stat-val" id="stat-ch">—</div><div class="stat-lbl">Каналов</div></div>
+      <div class="stat"><div class="stat-val green" id="stat-db">—</div><div class="stat-lbl">Всего в базе</div></div>
+      <div class="stat"><div class="stat-val" id="stat-last">—</div><div class="stat-lbl">Последний запуск</div></div>
+    </div>
+
+    <div id="progress-wrap">
+      <div class="prog-header"><span id="prog-label">Загрузка постов...</span><span id="prog-pct" style="font-family:var(--mono);font-size:12px">0%</span></div>
+      <div class="prog-bar-bg"><div class="prog-bar-fill" id="prog-bar"></div></div>
+      <div id="prog-log"></div>
+    </div>
+
+    <div class="analytics" id="analytics"></div>
+
+    <div class="actions-bar">
+      <input class="search-input" id="search" placeholder="Поиск по тексту сообщения или каналу..." oninput="filterTable()">
+      <div class="lang-switch" id="lang-switch" style="display:none">
+        <button id="lang-ru" class="active" onclick="setLang('ru')">Рус</button>
+        <button id="lang-orig" onclick="setLang('orig')">Ориг</button>
+      </div>
+      <select class="sort-select" id="sort-sel" onchange="sortTable()">
+        <option value="date-desc">Дата ↓</option>
+        <option value="date-asc">Дата ↑</option>
+        <option value="source">Канал А→Я</option>
+      </select>
+      <div class="menu-wrap" id="dl-menu">
+        <button class="btn-csv" id="btn-csv" disabled onclick="toggleMenu('dl-menu',event)">Скачать ▾</button>
+        <div class="menu-pop">
+          <button onclick="downloadAs('csv')"><span class="mk">CSV</span> Таблица CSV</button>
+          <button onclick="downloadAs('xlsx')"><span class="mk">XLSX</span> Excel</button>
+          <button onclick="downloadAs('md')"><span class="mk">MD</span> Markdown-дайджест</button>
+        </div>
+      </div>
+      <button class="btn-week" id="btn-week" disabled onclick="addToWeek(this)" title="Накопить эту выгрузку в текущую неделю (Пн–Вс)">В недельную базу</button>
+    </div>
+
+    <div class="table-wrap">
+      <div class="table-scroll">
+        <table id="news-table">
+          <thead>
+            <tr><th>Дата</th><th>Канал</th><th>Сообщение</th><th>Ссылка</th></tr>
+          </thead>
+          <tbody id="news-tbody">
+            <tr><td colspan="4">
+              <div class="empty">
+                <div class="empty-icon">✈️</div>
+                <div class="empty-title">Посты не загружены</div>
+                <div class="empty-sub">Нажмите «Обновить из Telegram», чтобы докачать свежие посты, затем выберите каналы и даты и нажмите «Загрузить из базы»</div>
+              </div>
+            </td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<script src="{{ url_for('static', filename='common.js') }}"></script>
+<script>
+let currentJobId = null;
+let allArticles  = [];
+let pollTimer    = null;
+let viewLang     = 'ru';
+let isTranslated = false;
+
+
+function esc(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+function fld(a,name){ if(viewLang==='ru' && a && a[name+'_ru']) return a[name+'_ru']; return (a && a[name]) || ''; }
+
+// ── каналы (только выбор; управление — в Настройках) ──
+const cnorm = s => String(s||'').replace(/^@/,'').trim();
+async function loadConfig(){
+  try{
+    const cfg = await (await fetch('/api/tg/config')).json();
+    renderChannels(cfg.db_channels || [], cfg.channels || []);
+  }catch(e){ /* ignore */ }
+}
+function renderChannels(dbCh, cfgCh){
+  const db  = new Set((dbCh||[]).map(cnorm));
+  const cfg = new Set((cfgCh||[]).map(cnorm));
+  const all = [...new Set([...db, ...cfg])].sort((a,b)=>a.localeCompare(b));
+  const el = document.getElementById('tg-channels');
+  if(!all.length){
+    el.innerHTML = '<div class="tg-help">Каналов пока нет. Добавьте их в <a href="/settings#telegram">Настройки → Telegram</a>.</div>';
+    updateChCount(); return;
+  }
+  el.innerHTML = all.map(c=>{
+    const isNew = cfg.has(c) && !db.has(c);
+    return `<label class="tg-ch">
+      <input type="checkbox" class="ch-check" value="${esc(c)}" checked onchange="updateChCount()">
+      <span class="c-name">@${esc(c)}</span>
+      ${isNew?'<span class="c-badge" title="Ещё нет постов в базе — нажмите «Обновить из Telegram»">новый</span>':''}
+    </label>`;
+  }).join('');
+  updateChCount();
+}
+function updateChCount(){
+  const all = document.querySelectorAll('.ch-check').length;
+  const on  = document.querySelectorAll('.ch-check:checked').length;
+  document.getElementById('ch-count').textContent = `${on} / ${all}`;
+}
+function selectAllCh(v){ document.querySelectorAll('.ch-check').forEach(c=>c.checked=v); updateChCount(); }
+function getSelectedChannels(){
+  const boxes = [...document.querySelectorAll('.ch-check')];
+  const on = boxes.filter(c=>c.checked).map(c=>c.value);
+  return (on.length===0 || on.length===boxes.length) ? [] : on;
+}
+
+// ── статус ──
+async function refreshStatus(checkAuth=true){
+  try{
+    const s = await (await fetch('/api/tg/status'+(checkAuth?'':'?auth=0'))).json();
+    let acc;
+    if(!s.configured) acc = `<span><span class="tg-dot off"></span>Не настроен</span>`;
+    else if(s.authorized) acc = `<span><span class="tg-dot on"></span>Вход: ${esc(s.me||'выполнен')}</span>`;
+    else if(s.auth_error) acc = `<span><span class="tg-dot off"></span>${esc(s.auth_error)}</span>`;
+    else if(checkAuth) acc = `<span><span class="tg-dot off"></span>Вход не выполнен</span>`;
+    else acc = `<span><span class="tg-dot off"></span>Проверка…</span>`;
+    document.getElementById('tg-status').innerHTML = acc +
+      `<span><span class="tg-dot ${s.db.ok?'on':'off'}"></span>База постов ${s.db.ok?'на месте':'недоступна'}</span>`;
+    document.getElementById('tg-db-total').textContent = s.db.ok ? s.db.total : '—';
+    document.getElementById('tg-last-date').textContent = s.db.last_date || '—';
+    document.getElementById('stat-db').textContent = s.db.ok ? s.db.total : '—';
+    document.getElementById('tg-auto-line').textContent = s.auto_collect
+      ? ('Автосбор включён' + (s.last_refresh?' · последний: '+s.last_refresh:'')) : (s.last_refresh?'Последнее обновление: '+s.last_refresh:'');
+    const hint = document.getElementById('tg-setup-hint');
+    const need = !s.configured || (checkAuth && !s.authorized && !s.auth_error);
+    hint.style.display = need ? 'block' : 'none';
+    hint.innerHTML = need ? 'Чтобы докачивать посты, подключите аккаунт: <a href="/settings#telegram">Настройки → Telegram</a>. Уже собранные посты загружаются и без этого.' : '';
+    document.getElementById('btn-refresh').disabled = !s.configured;
+    if(s.refresh_task && s.refresh_task.status==='running') followRefresh();
+  }catch(e){ /* ignore */ }
+}
+
+// ── обновление из Telegram (фоновая задача с логом) ──
+let refreshTimer = null;
+async function triggerRefresh(btn){
+  try{
+    const r = await (await fetch('/api/tg/refresh',{method:'POST',headers:{'Content-Type':'application/json'},body:'{}'})).json();
+    if(!r.ok){ toast(r.error||'Не удалось запустить обновление','error'); return; }
+    followRefresh();
+  }catch(e){ toast('Не удалось запустить обновление','error'); }
+}
+function followRefresh(){
+  const btn = document.getElementById('btn-refresh');
+  btn.disabled = true; btn.textContent = '⏳ Обновление из Telegram…';
+  document.getElementById('progress-wrap').classList.add('active');
+  document.getElementById('prog-label').textContent = 'Обновление из Telegram…';
+  if(refreshTimer) clearInterval(refreshTimer);
+  refreshTimer = setInterval(async ()=>{
+    const t = await (await fetch('/api/tg/refresh/status')).json();
+    document.getElementById('prog-bar').style.width = (t.progress||0)+'%';
+    document.getElementById('prog-pct').textContent = (t.progress||0)+'%';
+    renderLog(t.log||[]);
+    if(t.status!=='running'){
+      clearInterval(refreshTimer); refreshTimer=null;
+      btn.disabled=false; btn.textContent='Обновить из Telegram';
+      if(t.status==='done'){
+        document.getElementById('prog-label').textContent = 'Telegram обновлён';
+        const added = (t.result||{}).added||0;
+        toast('Новых постов: '+added+'. Нажмите «Загрузить из базы».','success',5000);
+      }else{
+        document.getElementById('prog-label').textContent = '✗ Не удалось обновить';
+        toast(((t.result||{}).error)||'Ошибка обновления','error',6000);
+      }
+      loadConfig(); refreshStatus(false);
+    }
+  }, 1000);
+}
+function renderLog(lines){
+  const logEl = document.getElementById('prog-log');
+  logEl.innerHTML = lines.map(l=>{
+    if(l.includes('⚠')) return `<div class="warn">${esc(l)}</div>`;
+    if(l.includes('✗')) return `<div class="err">${esc(l)}</div>`;
+    if(l.includes('✓')) return `<div class="ok">${esc(l)}</div>`;
+    return `<div>${esc(l)}</div>`;
+  }).join('');
+  logEl.scrollTop = logEl.scrollHeight;
+}
+
+// ── загрузка постов (job) ──
+async function startFetch(){
+  const btn = document.getElementById('btn-fetch');
+  btn.disabled = true; btn.textContent = '⏳ Загрузка...';
+  document.getElementById('btn-csv').disabled = true;
+  document.getElementById('progress-wrap').classList.add('active');
+  document.getElementById('prog-bar').style.width='0%';
+  document.getElementById('prog-pct').textContent='0%';
+  document.getElementById('prog-log').innerHTML='';
+  document.getElementById('prog-label').textContent='Загрузка постов...';
+  document.getElementById('stat-total').textContent='…';
+  document.getElementById('stat-ch').textContent='…';
+
+  try{
+    const data = await (await fetch('/api/tg/fetch',{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({
+        date_from: document.getElementById('date-from').value,
+        date_to:   document.getElementById('date-to').value,
+        channels:  getSelectedChannels(),
+        translate: document.getElementById('translate').checked,
+      })})).json();
+    currentJobId = data.job_id;
+    localStorage.setItem('tg_job_id', currentJobId);
+    if(pollTimer) clearInterval(pollTimer);
+    pollTimer = setInterval(pollJob, 1000);
+  }catch(e){ toast('Не удалось запустить загрузку','error'); resetBtn(); }
+}
+function resetBtn(){ const b=document.getElementById('btn-fetch'); b.disabled=false; b.textContent='Загрузить из базы'; }
+
+async function pollJob(){
+  if(!currentJobId) return;
+  const data = await (await fetch(`/api/tg/job/${currentJobId}`)).json();
+  document.getElementById('prog-bar').style.width = data.progress+'%';
+  document.getElementById('prog-pct').textContent = data.progress+'%';
+  document.getElementById('stat-total').textContent = data.count;
+
+  renderLog(data.log||[]);
+
+  if(data.status==='error'){ clearInterval(pollTimer); document.getElementById('prog-label').textContent='✗ Ошибка'; resetBtn(); return; }
+  if(data.status==='done'){
+    clearInterval(pollTimer);
+    document.getElementById('prog-label').textContent='Готово';
+    document.getElementById('stat-last').textContent = new Date().toLocaleTimeString('ru-RU');
+    await loadJobResult(currentJobId, data.translated);
+    resetBtn();
+  }
+}
+
+async function loadJobResult(jobId, translated){
+  const data = await (await fetch(`/api/tg/job/${jobId}/articles`)).json();
+  allArticles = data.articles || [];
+  isTranslated = !!(translated ?? data.translated);
+  document.getElementById('stat-ch').textContent = new Set(allArticles.map(a=>a.source_name)).size || '—';
+  applyLangVisibility();
+  renderTable(getSorted(allArticles));
+  Analytics.render('analytics', allArticles);
+  document.getElementById('btn-csv').disabled = allArticles.length===0;
+  document.getElementById('btn-week').disabled = allArticles.length===0;
+}
+
+// ── язык / сортировка / поиск / таблица ──
+function applyLangVisibility(){
+  const sw = document.getElementById('lang-switch');
+  sw.style.display = isTranslated ? 'flex' : 'none';
+  if(!isTranslated) viewLang='orig';
+  setLangButtons();
+}
+function setLangButtons(){
+  document.getElementById('lang-ru').classList.toggle('active', viewLang==='ru');
+  document.getElementById('lang-orig').classList.toggle('active', viewLang==='orig');
+}
+function setLang(l){ viewLang=l; setLangButtons(); renderTable(getSorted(getFiltered())); }
+function getFiltered(){
+  const q = document.getElementById('search').value.toLowerCase();
+  if(!q) return allArticles;
+  return allArticles.filter(a=>(a.source_name||'').toLowerCase().includes(q)||fld(a,'summary').toLowerCase().includes(q)||fld(a,'title').toLowerCase().includes(q));
+}
+function getSorted(arr){
+  const s = document.getElementById('sort-sel').value;
+  const copy = [...arr];
+  if(s==='date-desc') copy.sort((a,b)=>(b.published_at||'').localeCompare(a.published_at||''));
+  if(s==='date-asc')  copy.sort((a,b)=>(a.published_at||'').localeCompare(b.published_at||''));
+  if(s==='source')    copy.sort((a,b)=>(a.source_name||'').localeCompare(b.source_name||''));
+  return copy;
+}
+function sortTable(){ renderTable(getSorted(getFiltered())); }
+function filterTable(){ renderTable(getSorted(getFiltered())); }
+
+function renderTable(articles){
+  const tbody = document.getElementById('news-tbody');
+  if(!articles.length){
+    tbody.innerHTML=`<tr><td colspan="4"><div class="empty"><div class="empty-icon">🔭</div><div class="empty-title">Ничего не найдено</div><div class="empty-sub">Измените фильтры, каналы или диапазон дат</div></div></td></tr>`;
+    return;
+  }
+  tbody.innerHTML = articles.map(a=>`
+    <tr>
+      <td class="td-date">${esc(a.published_at||'—')}</td>
+      <td class="td-src"><span class="tg-pill">${esc(a.source_name)}</span></td>
+      <td class="td-summ">${esc(fld(a,'summary')||fld(a,'title'))}</td>
+      <td class="td-link"><a href="${esc(a.url)}" target="_blank" rel="noreferrer">${esc((a.url||'').length>55?a.url.slice(0,55)+'…':(a.url||''))}</a></td>
+    </tr>`).join('');
+}
+
+function downloadAs(fmt){
+  if(!currentJobId){ toast('Сначала загрузите посты','warn'); return; }
+  document.getElementById('dl-menu').classList.remove('open');
+  downloadUrl(`/api/tg/job/${currentJobId}/export?fmt=${fmt}&lang=${viewLang}`, 'файл '+fmt.toUpperCase());
+}
+
+async function addToWeek(btn){
+  if(!currentJobId){ toast('Сначала загрузите посты','warn'); return; }
+  btn.disabled = true; const old = btn.textContent; btn.textContent = '⏳ Добавляю…';
+  try{
+    const data = await (await fetch('/api/week/add',{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({source:'tg', job_id:currentJobId})})).json();
+    if(data.error){ toast(data.error,'error'); }
+    else{
+      const parts = (data.weeks||[]).map(w=>`${w.label}: +${w.added}/${w.updated}↻ (${w.total})`);
+      toast('В базу по датам новостей → '+parts.join(' · '),'success');
+    }
+  }catch(e){ toast('Не удалось добавить в недельную базу','error'); }
+  btn.disabled = false; btn.textContent = old;
+}
+
+// ── история ──
+async function openJob(id){
+  try{
+    const res = await fetch(`/api/tg/job/${id}`);
+    if(!res.ok){ toast('Загрузка не найдена','error'); return; }
+    const data = await res.json();
+    currentJobId = id;
+    localStorage.setItem('tg_job_id', id);
+    document.getElementById('stat-total').textContent = data.count;
+    if(data.finished_at) document.getElementById('stat-last').textContent = data.finished_at.slice(11,16);
+    await loadJobResult(id, data.translated);
+    toast('Загрузка открыта','success');
+  }catch(e){ toast('Не удалось открыть','error'); }
+}
+
+async function applyPrefs(){
+  const p = await Prefs.get();
+  if(p.translation){
+    document.getElementById('translate').checked = !!p.translation.default_on;
+    document.getElementById('tr-hint').innerHTML = 'Сервис: <b>'+(p.translation.provider==='deepl'&&p.translation.has_deepl_key?'DeepL':'Google (бесплатно)')+'</b> · <a href="/settings#translation">изменить</a>';
+  }
+}
+async function restoreLast(){
+  History.init('tg', {tg: openJob});
+  applyPrefs();
+  loadConfig();
+  refreshStatus(false).then(()=>refreshStatus(true));
+  const params = new URLSearchParams(location.search);
+  const openId = params.get('open_tg');
+  if(openId){ history.replaceState({},'','/tg'); await openJob(openId); return; }
+
+  const saved = localStorage.getItem('tg_job_id');
+  if(!saved) return;
+  try{
+    const res = await fetch(`/api/tg/job/${saved}`);
+    if(!res.ok){ localStorage.removeItem('tg_job_id'); return; }
+    const data = await res.json();
+    if(data.status==='done'){
+      currentJobId = saved;
+      document.getElementById('stat-total').textContent = data.count;
+      if(data.finished_at) document.getElementById('stat-last').textContent = data.finished_at.slice(11,16);
+      await loadJobResult(saved, data.translated);
+    }
+  }catch(e){ /* сервер перезапущен — игнорируем */ }
+}
+restoreLast();
+</script>
+</body>
+</html>

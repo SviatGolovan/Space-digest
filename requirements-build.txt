@@ -1,0 +1,5 @@
+-r requirements.txt
+pyinstaller>=6.10
+pyinstaller-hooks-contrib>=2024.8
+pillow>=10                 # иконки
+pytest>=8                  # тесты ядра

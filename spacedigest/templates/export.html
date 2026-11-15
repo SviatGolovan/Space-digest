@@ -1,0 +1,121 @@
+{% import "_layout.html" as L %}
+<!DOCTYPE html>
+<html lang="ru" class="{{ 'fx' if fx_on }}" data-theme="{{ 'light' if theme == 'system' else theme }}" data-theme-pref="{{ theme }}">
+<head>
+{{ L.head("Выгрузка") }}
+</head>
+<body>
+<div class="layout">
+{{ L.header("export", "📤") }}
+
+  <aside class="sidebar">
+    <div class="card">
+      <div class="card-title">Что выгружаем</div>
+      <div class="seg" id="mode" style="width:100%">
+        <button data-v="since_last" class="on" style="flex:1.6">С прошлой выгрузки</button>
+        <button data-v="dates" style="flex:1">За даты</button>
+      </div>
+      <div class="date-row" id="dates-row" style="display:none;margin-top:10px">
+        <label class="field">С <input type="date" id="date-from"></label>
+        <label class="field">По <input type="date" id="date-to"></label>
+      </div>
+      <div class="set-note" id="mode-hint" style="margin-top:10px">…</div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Источники</div>
+      <label class="toggle-row"><div class="toggle-label">Сайты <small id="cnt-rss">—</small></div>
+        <label class="switch"><input type="checkbox" id="k-rss" checked><span class="slider"></span></label></label>
+      <label class="toggle-row"><div class="toggle-label">Telegram <small id="cnt-tg">—</small></div>
+        <label class="switch"><input type="checkbox" id="k-tg" checked><span class="slider"></span></label></label>
+      <label class="toggle-row"><div class="toggle-label">Убрать повторы
+          <small>и то, что уже было в выгрузках</small></div>
+        <label class="switch"><input type="checkbox" id="dedupe" checked><span class="slider"></span></label></label>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Сбор новостей</div>
+      <div class="ex-collect" id="collect-status"><div class="set-note">…</div></div>
+      <button class="btn-secondary" id="btn-collect" onclick="collectNow()">Собрать сейчас</button>
+    </div>
+
+    <button class="btn-fetch" id="btn-prepare" onclick="prepare()">{{ L.icon('welcome') }} Подготовить для ChatGPT</button>
+  </aside>
+
+  <main class="main">
+    <div class="stats-bar">
+      <div class="stat"><div class="stat-val" id="st-total">—</div><div class="stat-lbl">Новостей к выгрузке</div></div>
+      <div class="stat"><div class="stat-val" id="st-rss">—</div><div class="stat-lbl">С сайтов</div></div>
+      <div class="stat"><div class="stat-val" id="st-tg">—</div><div class="stat-lbl">Из Telegram</div></div>
+      <div class="stat"><div class="stat-val small" id="st-period">—</div><div class="stat-lbl">Период публикаций</div></div>
+    </div>
+
+    <!-- Подготовка и шаги в ChatGPT -->
+    <div class="card ex-steps" id="steps" style="display:none">
+      <div class="ex-steps-head">
+        <div><div class="card-title" style="margin:0" id="steps-title">Выгрузка готова</div>
+          <div class="set-note" id="steps-sub"></div></div>
+        <span class="pill" id="steps-pill"></span>
+      </div>
+      <div class="report" id="prep-log" style="display:none"></div>
+      <div id="steps-body">
+        <div class="ex-step"><span class="n">1</span>
+          <div class="t"><b>Промпт скопирован</b> — период уже подставлен
+            <small id="s1-note">Вставьте его в ChatGPT: Ctrl+V (на Mac ⌘V).</small></div>
+          <button class="btn" onclick="copyPrompt()">Скопировать снова</button></div>
+        <div class="ex-step"><span class="n">2</span>
+          <div class="t"><b>Прикрепите файл</b> <span class="mono" id="s2-file"></span>
+            <small>Перетащите его из папки в окно ChatGPT или нажмите «скрепку» в чате.</small></div>
+          <button class="btn" onclick="openExport('folder')">Показать файл</button></div>
+        <div class="ex-step"><span class="n">3</span>
+          <div class="t"><b>Отправьте</b> и дождитесь ссылки на DOCX
+            <small>ChatGPT обработает все строки и пришлёт файл дайджеста.</small></div>
+          <button class="btn primary fx-arrow" onclick="openChat()">Открыть ChatGPT</button></div>
+        <div class="ex-step"><span class="n">4</span>
+          <div class="t"><b>Скачайте DOCX</b> — программа заберёт его сама
+            <small id="s4-note">Как только файл появится в «Загрузках», он будет сохранён в папку выгрузки. Кнопка — если хотите сразу.</small></div>
+          <button class="btn" id="btn-docx" onclick="collectDocx()">Забрать DOCX</button></div>
+      </div>
+    </div>
+
+    <!-- Проверка выгрузки: сюжеты, «уже было», убранные строки -->
+    <div class="table-wrap" id="review" style="display:none;flex:none">
+      <div class="ex-tbl-head rv-head">
+        <b>Проверка выгрузки</b>
+        <div class="seg rv-tabs" id="rv-tabs">
+          <button data-v="rows" class="on">Строки CSV <span class="rv-c" id="rv-c-rows"></span></button>
+          <button data-v="multi">Сюжеты <span class="rv-c" id="rv-c-multi"></span></button>
+          <button data-v="known">Уже было <span class="rv-c" id="rv-c-known"></span></button>
+          <button data-v="filtered">Отфильтровано <span class="rv-c" id="rv-c-filtered"></span></button>
+          <button data-v="excluded">Убрано <span class="rv-c" id="rv-c-excluded"></span></button>
+        </div>
+        <span class="set-note" id="rv-note"></span>
+      </div>
+      <div class="rv-sugg" id="rv-sugg" style="display:none"></div>
+      <div class="table-scroll" style="max-height:560px">
+        <table class="news-table rv-table"><tbody id="rv-body"></tbody></table>
+      </div>
+    </div>
+
+    <div class="table-wrap" style="flex:none" id="preview-card">
+      <div class="ex-tbl-head"><b>Новости к выгрузке</b> <span class="set-note" id="list-note"></span></div>
+      <div class="table-scroll" style="max-height:420px">
+        <table class="news-table"><tbody id="preview-body">
+          <tr><td><div class="empty"><div class="empty-icon">📭</div><div class="empty-title">Загрузка…</div></div></td></tr>
+        </tbody></table>
+      </div>
+    </div>
+
+    <div class="table-wrap" style="flex:none">
+      <div class="ex-tbl-head"><b>Прошлые выгрузки</b></div>
+      <div class="table-scroll" style="max-height:340px">
+        <table class="news-table"><tbody id="history-body"></tbody></table>
+      </div>
+    </div>
+  </main>
+</div>
+
+<script src="{{ url_for('static', filename='common.js') }}"></script>
+<script src="{{ url_for('static', filename='export.js') }}"></script>
+</body>
+</html>

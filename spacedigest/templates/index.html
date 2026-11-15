@@ -1,0 +1,433 @@
+{% import "_layout.html" as L %}
+<!DOCTYPE html>
+<html lang="ru" class="{{ 'fx' if fx_on }}" data-theme="{{ 'light' if theme == 'system' else theme }}" data-theme-pref="{{ theme }}">
+<head>
+{{ L.head("Сайты") }}
+</head>
+<body>
+<div class="layout">
+
+  <!-- Header -->
+{{ L.header("sites", "🛰️") }}
+
+  <!-- Sidebar -->
+  <aside class="sidebar">
+
+    <!-- Dates -->
+    <div class="card">
+      <div class="card-title">Диапазон дат</div>
+      <div class="date-row">
+        <label class="field">От <input type="date" id="date-from"></label>
+        <label class="field">До <input type="date" id="date-to"></label>
+      </div>
+    </div>
+
+    <!-- Перевод -->
+    <div class="card">
+      <div class="card-title">Перевод</div>
+      <div class="toggle-row">
+        <div class="toggle-label">Переводить на русский
+          <small>после сбора новости переводятся</small>
+        </div>
+        <label class="switch"><input type="checkbox" id="translate"><span class="slider"></span></label>
+      </div>
+      <div class="hint" id="tr-hint">Сервис перевода выбирается в <a href="/settings#translation">Настройках</a>.</div>
+    </div>
+
+    <!-- Sources -->
+    <div class="card" style="flex:1;min-height:0;display:flex;flex-direction:column">
+      <div class="card-title">Источники</div>
+
+      <!-- Category filter -->
+      <div class="cat-tabs" id="cat-tabs">
+        <button class="cat-tab active" data-cat="all" onclick="filterCat(this)">Все</button>
+        <button class="cat-tab" data-cat="Ежедневные новости"   onclick="filterCat(this)">Ежедневные</button>
+        <button class="cat-tab" data-cat="Отраслевые издания"   onclick="filterCat(this)">Отраслевые</button>
+        <button class="cat-tab" data-cat="Военный космос"       onclick="filterCat(this)">Военные</button>
+        <button class="cat-tab" data-cat="Научпоп"              onclick="filterCat(this)">Научпоп</button>
+        <button class="cat-tab" data-cat="Аналитика"            onclick="filterCat(this)">Аналитика</button>
+        <button class="cat-tab" data-cat="Широкопрофильные СМИ" onclick="filterCat(this)">СМИ</button>
+        <button class="cat-tab" data-cat="Международные"        onclick="filterCat(this)">Международные</button>
+        <button class="cat-tab" data-cat="Коммерческий космос"  onclick="filterCat(this)">Коммерческий</button>
+        <button class="cat-tab" data-cat="Нишевые"              onclick="filterCat(this)">Нишевые</button>
+        <button class="cat-tab" data-cat="Свои"                 onclick="filterCat(this)">Свои</button>
+      </div>
+
+      <div class="sources-header">
+        <div class="select-btns">
+          <button class="link-btn" onclick="selectVisible(true)">Все</button>
+          <button class="link-btn" onclick="selectVisible(false)">Снять</button>
+        </div>
+        <a class="src-add-btn" href="/settings#sources" title="Добавить, выключить или удалить источники">Управлять →</a>
+        <span class="src-count" id="src-count">0 / 0</span>
+      </div>
+
+      <div class="sources-list" id="sources-list">
+        {% for s in sources %}
+        <label class="source-item" data-cat="{{ s.category }}">
+          <input type="checkbox" class="src-check" value="{{ s.id }}" {% if s.enabled %}checked{% endif %}>
+          <span class="src-name">{{ s.name }}</span>
+          {% if s.custom %}<span class="src-custom-tag">СВОЙ</span>
+          {% else %}<span class="src-region">{{ s.region }}</span>{% endif %}
+        </label>
+        {% endfor %}
+      </div>
+    </div>
+
+    <button class="btn-fetch" id="btn-fetch" onclick="startFetch()">
+      Запустить парсинг
+    </button>
+  </aside>
+
+  <!-- Main -->
+  <main class="main">
+
+    <!-- Stats -->
+    <div class="stats-bar">
+      <div class="stat">
+        <div class="stat-val" id="stat-total">—</div>
+        <div class="stat-lbl">Статей найдено</div>
+      </div>
+      <div class="stat">
+        <div class="stat-val green" id="stat-ok">—</div>
+        <div class="stat-lbl">Источников успешно</div>
+      </div>
+      <div class="stat">
+        <div class="stat-val amber" id="stat-fail">—</div>
+        <div class="stat-lbl">Ошибок</div>
+      </div>
+      <div class="stat">
+        <div class="stat-val" id="stat-last">—</div>
+        <div class="stat-lbl">Последний запуск</div>
+      </div>
+    </div>
+
+    <!-- Progress -->
+    <div id="progress-wrap">
+      <div class="prog-header">
+        <span id="prog-label">Сбор новостей...</span>
+        <span id="prog-pct" style="font-family:var(--mono);font-size:12px">0%</span>
+      </div>
+      <div class="prog-bar-bg"><div class="prog-bar-fill" id="prog-bar"></div></div>
+      <div id="prog-log"></div>
+    </div>
+
+    <!-- Аналитика -->
+    <div class="analytics" id="analytics"></div>
+
+    <!-- Actions -->
+    <div class="actions-bar">
+      <input class="search-input" id="search" placeholder="Поиск по заголовку, источнику или тексту новости..." oninput="filterTable()">
+      <div class="lang-switch" id="lang-switch" style="display:none">
+        <button id="lang-ru" class="active" onclick="setLang('ru')">Рус</button>
+        <button id="lang-orig" onclick="setLang('orig')">Ориг</button>
+      </div>
+      <select class="sort-select" id="sort-sel" onchange="sortTable()">
+        <option value="date-desc">Дата ↓</option>
+        <option value="date-asc">Дата ↑</option>
+        <option value="source">Источник А→Я</option>
+      </select>
+      <div class="menu-wrap" id="dl-menu">
+        <button class="btn-csv" id="btn-csv" disabled onclick="toggleMenu('dl-menu',event)">Скачать ▾</button>
+        <div class="menu-pop">
+          <button onclick="downloadAs('csv')"><span class="mk">CSV</span> Таблица CSV</button>
+          <button onclick="downloadAs('xlsx')"><span class="mk">XLSX</span> Excel</button>
+          <button onclick="downloadAs('md')"><span class="mk">MD</span> Markdown-дайджест</button>
+        </div>
+      </div>
+      <button class="btn-week" id="btn-week" disabled onclick="addToWeek(this)" title="Накопить эту выгрузку в текущую неделю (Пн–Вс)">В недельную базу</button>
+    </div>
+
+    <!-- Table -->
+    <div class="table-wrap">
+      <div class="table-scroll">
+        <table id="news-table">
+          <thead>
+            <tr>
+              <th>Дата</th>
+              <th>Источник</th>
+              <th>Заголовок</th>
+              <th>Новость</th>
+              <th>Ссылка</th>
+            </tr>
+          </thead>
+          <tbody id="news-tbody">
+            <tr><td colspan="5">
+              <div class="empty">
+                <div class="empty-icon">🌌</div>
+                <div class="empty-title">Новостей пока нет</div>
+                <div class="empty-sub">Выберите источники, задайте диапазон дат и нажмите «Запустить парсинг»</div>
+              </div>
+            </td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<script src="{{ url_for('static', filename='common.js') }}"></script>
+<script>
+let currentJobId = null;
+let allArticles  = [];
+let pollTimer    = null;
+let okCount      = 0;
+let failCount    = 0;
+let viewLang     = 'ru';     // 'ru' | 'orig'
+let isTranslated = false;
+
+
+// ── source counter ──
+function updateCount(){
+  const total   = document.querySelectorAll('.source-item:not(.hidden)').length;
+  const checked = document.querySelectorAll('.source-item:not(.hidden) .src-check:checked').length;
+  document.getElementById('src-count').textContent = `${checked} / ${total}`;
+  updateBadge();
+}
+function updateBadge(){
+  const b = document.getElementById('hdr-badge');
+  if(b) b.textContent = document.querySelectorAll('.source-item').length + ' источников';
+}
+// делегирование: работает и для динамически добавленных источников
+document.getElementById('sources-list').addEventListener('change', e=>{
+  if(e.target.classList && e.target.classList.contains('src-check')) updateCount();
+});
+updateCount();
+
+// ── category filter ──
+let activeCat = 'all';
+function filterCat(btn){
+  document.querySelectorAll('.cat-tab').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  activeCat = btn.dataset.cat;
+  document.querySelectorAll('.source-item').forEach(item=>{
+    const match = activeCat==='all' || item.dataset.cat===activeCat;
+    item.classList.toggle('hidden',!match);
+  });
+  updateCount();
+}
+
+// ── select visible ──
+function selectVisible(v){
+  document.querySelectorAll('.source-item:not(.hidden) .src-check').forEach(c=>c.checked=v);
+  updateCount();
+}
+
+function getSelectedSources(){
+  return [...document.querySelectorAll('.src-check:checked')].map(c=>c.value);
+}
+
+// ── fetch ──
+async function startFetch(){
+  const sources = getSelectedSources();
+  if(!sources.length){toast('Выберите хотя бы один источник','warn');return;}
+
+  const btn = document.getElementById('btn-fetch');
+  btn.disabled=true; btn.textContent='⏳ Парсинг...';
+  document.getElementById('btn-csv').disabled=true;
+  document.getElementById('prog-bar').style.width='0%';
+  document.getElementById('prog-pct').textContent='0%';
+  document.getElementById('prog-log').innerHTML='';
+  document.getElementById('prog-label').textContent='Сбор новостей...';
+  document.getElementById('progress-wrap').classList.add('active');
+  document.getElementById('stat-total').textContent='…';
+  document.getElementById('stat-ok').textContent='…';
+  document.getElementById('stat-fail').textContent='…';
+  okCount=0; failCount=0;
+
+  const res  = await fetch('/api/fetch',{method:'POST',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({
+      sources,
+      date_from:document.getElementById('date-from').value,
+      date_to:document.getElementById('date-to').value,
+      translate:document.getElementById('translate').checked,
+    })});
+  const data = await res.json();
+  currentJobId = data.job_id;
+  localStorage.setItem('parser_job_id', currentJobId);   // запоминаем для истории
+
+  if(pollTimer) clearInterval(pollTimer);
+  pollTimer = setInterval(pollJob,1100);
+}
+
+async function pollJob(){
+  if(!currentJobId) return;
+  const res  = await fetch(`/api/job/${currentJobId}`);
+  const data = await res.json();
+
+  document.getElementById('prog-bar').style.width = data.progress+'%';
+  document.getElementById('prog-pct').textContent = data.progress+'%';
+  document.getElementById('stat-total').textContent = data.count;
+
+  // count ok/fail from log
+  okCount   = data.log.filter(l=>l.includes('✓')&&!l.includes('Переведено')).length;
+  failCount = data.log.filter(l=>l.includes('✗')).length;
+  document.getElementById('stat-ok').textContent   = okCount;
+  document.getElementById('stat-fail').textContent = failCount;
+
+  const logEl = document.getElementById('prog-log');
+  logEl.innerHTML = data.log.map(l=>{
+    if(l.includes('⚠')) return `<div class="err">${esc(l)}</div>`;
+    if(l.includes('✓')) return `<div class="ok">${esc(l)}</div>`;
+    if(l.includes('✗')) return `<div class="err">${esc(l)}</div>`;
+    return `<div>${esc(l)}</div>`;
+  }).join('');
+  logEl.scrollTop = logEl.scrollHeight;
+
+  if(data.status==='done'){
+    clearInterval(pollTimer);
+    document.getElementById('prog-label').textContent='Готово';
+    document.getElementById('stat-last').textContent = new Date().toLocaleTimeString('ru-RU');
+    await loadJobResult(currentJobId, data.translated);
+    document.getElementById('btn-fetch').disabled=false;
+    document.getElementById('btn-fetch').textContent='Запустить парсинг';
+  }
+}
+
+// Загрузка статей задачи (используется и при поллинге, и при восстановлении истории)
+async function loadJobResult(jobId, translated){
+  const arts = await fetch(`/api/job/${jobId}/articles`);
+  const data = await arts.json();
+  allArticles = data.articles || [];
+  isTranslated = !!(translated ?? data.translated);
+  applyLangVisibility();
+  renderTable(getSorted(allArticles));
+  Analytics.render('analytics', allArticles);
+  document.getElementById('btn-csv').disabled = allArticles.length===0;
+  document.getElementById('btn-week').disabled = allArticles.length===0;
+}
+
+// Показ переключателя языка и выбор языка по умолчанию
+function applyLangVisibility(){
+  const sw = document.getElementById('lang-switch');
+  sw.style.display = isTranslated ? 'flex' : 'none';
+  if(!isTranslated) viewLang = 'orig';
+  setLangButtons();
+}
+function setLangButtons(){
+  document.getElementById('lang-ru').classList.toggle('active', viewLang==='ru');
+  document.getElementById('lang-orig').classList.toggle('active', viewLang==='orig');
+}
+function setLang(l){ viewLang=l; setLangButtons(); renderTable(getSorted(getFiltered())); }
+function getFiltered(){
+  const q = document.getElementById('search').value.toLowerCase();
+  if(!q) return allArticles;
+  return allArticles.filter(a=>fld(a,'title').toLowerCase().includes(q)||(a.source_name||'').toLowerCase().includes(q)||fld(a,'summary').toLowerCase().includes(q));
+}
+// выбор поля с учётом языка
+function fld(a, name){
+  if(viewLang==='ru' && a[name+'_ru']) return a[name+'_ru'];
+  return a[name]||'';
+}
+
+// ── sort ──
+function getSorted(arr){
+  const s = document.getElementById('sort-sel').value;
+  const copy = [...arr];
+  if(s==='date-desc') copy.sort((a,b)=>(b.published_at||'').localeCompare(a.published_at||''));
+  if(s==='date-asc')  copy.sort((a,b)=>(a.published_at||'').localeCompare(b.published_at||''));
+  if(s==='source')    copy.sort((a,b)=>(a.source_name||'').localeCompare(b.source_name||''));
+  return copy;
+}
+function sortTable(){ renderTable(getSorted(getFiltered())); }
+
+// ── search ──
+function filterTable(){ renderTable(getSorted(getFiltered())); }
+
+function renderTable(articles){
+  const tbody = document.getElementById('news-tbody');
+  if(!articles.length){
+    tbody.innerHTML=`<tr><td colspan="5"><div class="empty"><div class="empty-icon">🔭</div><div class="empty-title">Ничего не найдено</div><div class="empty-sub">Попробуйте изменить фильтры</div></div></td></tr>`;
+    return;
+  }
+  tbody.innerHTML = articles.map(a=>`
+    <tr>
+      <td class="td-date">${esc(a.published_at||'—')}</td>
+      <td class="td-src">
+        <span class="src-pill">${esc(a.source_name)}</span>
+      </td>
+      <td class="td-title"><a href="${esc(a.url)}" target="_blank" rel="noreferrer">${esc(fld(a,'title'))}</a></td>
+      <td class="td-summ">${esc(fld(a,'summary'))}</td>
+      <td class="td-link"><a href="${esc(a.url)}" target="_blank" rel="noreferrer">${esc((a.url||'').length>55?a.url.slice(0,55)+'…':(a.url||''))}</a></td>
+    </tr>
+  `).join('');
+}
+
+function downloadAs(fmt){
+  if(!currentJobId){ toast('Сначала запустите парсинг','warn'); return; }
+  document.getElementById('dl-menu').classList.remove('open');
+  downloadUrl(`/api/job/${currentJobId}/export?fmt=${fmt}&lang=${viewLang}`, 'файл '+fmt.toUpperCase());
+}
+
+async function addToWeek(btn){
+  if(!currentJobId){ toast('Сначала запустите парсинг','warn'); return; }
+  btn.disabled = true; const old = btn.textContent; btn.textContent = '⏳ Добавляю…';
+  try{
+    const data = await (await fetch('/api/week/add',{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({source:'parser', job_id:currentJobId})})).json();
+    if(data.error){ toast(data.error,'error'); }
+    else{
+      const parts = (data.weeks||[]).map(w=>`${w.label}: +${w.added}/${w.updated}↻ (${w.total})`);
+      toast('В базу по датам новостей → '+parts.join(' · '),'success');
+    }
+  }catch(e){ toast('Не удалось добавить в недельную базу','error'); }
+  btn.disabled = false; btn.textContent = old;
+}
+
+function esc(s){
+  return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// ── Открытие выгрузки из истории ──
+async function openJob(id){
+  try{
+    const res = await fetch(`/api/job/${id}`);
+    if(!res.ok){ toast('Выгрузка не найдена','error'); return; }
+    const data = await res.json();
+    currentJobId = id;
+    localStorage.setItem('parser_job_id', id);
+    document.getElementById('stat-total').textContent = data.count;
+    if(data.finished_at) document.getElementById('stat-last').textContent = data.finished_at.slice(11,16);
+    await loadJobResult(id, data.translated);
+    toast('Выгрузка открыта','success');
+  }catch(e){ toast('Не удалось открыть','error'); }
+}
+
+// ── Восстановление результата при возврате на страницу ──
+async function applyPrefs(){
+  const p = await Prefs.get();
+  if(p.translation){
+    document.getElementById('translate').checked = !!p.translation.default_on;
+    document.getElementById('tr-hint').innerHTML = 'Сервис: <b>'+(p.translation.provider==='deepl'&&p.translation.has_deepl_key?'DeepL':'Google (бесплатно)')+'</b> · <a href="/settings#translation">изменить</a>';
+  }
+}
+async function restoreLast(){
+  History.init('parser', {parser: openJob});
+  applyPrefs();
+  const params = new URLSearchParams(location.search);
+  const openId = params.get('open_job');
+  if(openId){ history.replaceState({},'','/'); await openJob(openId); return; }
+
+  const saved = localStorage.getItem('parser_job_id');
+  if(!saved) return;
+  try{
+    const res = await fetch(`/api/job/${saved}`);
+    if(!res.ok){ localStorage.removeItem('parser_job_id'); return; }
+    const data = await res.json();
+    if(data.status==='done'){
+      currentJobId = saved;
+      document.getElementById('stat-total').textContent = data.count;
+      okCount   = (data.log||[]).filter(l=>l.includes('✓')&&!l.includes('Переведено')).length;
+      failCount = (data.log||[]).filter(l=>l.includes('✗')).length;
+      document.getElementById('stat-ok').textContent   = okCount||'—';
+      document.getElementById('stat-fail').textContent = failCount||'—';
+      if(data.finished_at) document.getElementById('stat-last').textContent = data.finished_at.slice(11,16);
+      await loadJobResult(saved, data.translated);
+    }
+  }catch(e){ /* нет сети/сервер перезапущен — игнорируем */ }
+}
+restoreLast();
+</script>
+</body>
+</html>

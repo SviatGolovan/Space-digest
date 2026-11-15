@@ -1,0 +1,13 @@
+# Space Digest — зависимости программы
+flask>=3.0
+requests>=2.31
+feedparser>=6.0          # разбор RSS/Atom (ядро 4.0)
+urllib3>=2.0
+deep-translator>=1.11
+openpyxl>=3.1
+numpy>=1.24
+scikit-learn>=1.3          # запасной движок дедупликации (TF-IDF)
+fastembed>=0.5             # нейросетевой движок (ONNX, без torch)
+telethon>=1.36             # Telegram прямо внутри программы
+pywebview>=5.0             # родное окно (Windows: WebView2, macOS: WebKit)
+trafilatura>=2.0          # полный текст статей со страниц

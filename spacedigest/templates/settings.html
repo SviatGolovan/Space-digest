@@ -1,0 +1,590 @@
+{% import "_layout.html" as L %}
+<!DOCTYPE html>
+<html lang="ru" class="{{ 'fx' if fx_on }}" data-theme="{{ 'light' if theme == 'system' else theme }}" data-theme-pref="{{ theme }}">
+<head>
+{{ L.head("Настройки") }}
+</head>
+<body>
+<div class="layout set-layout">
+{{ L.header("settings", "⚙") }}
+
+  <nav class="set-nav" id="set-nav">
+    <a href="#welcome">{{ L.icon("welcome") }}Начало работы</a>
+    <div class="nav-sep"></div>
+    <a href="#general">{{ L.icon("general") }}Общие</a>
+    <a href="#export">{{ L.icon("export") }}Выгрузка и ChatGPT</a>
+    <a href="#filter">{{ L.icon("filter") }}Фильтр мусора</a>
+    <a href="#sources">{{ L.icon("rss") }}Источники сайтов</a>
+    <a href="#telegram">{{ L.icon("tg") }}Telegram</a>
+    <a href="#translation">{{ L.icon("lang") }}Перевод</a>
+    <a href="#dedup">{{ L.icon("dedup") }}Дедупликатор</a>
+    <div class="nav-sep"></div>
+    <a href="#data">{{ L.icon("data") }}Данные</a>
+    <a href="#security">{{ L.icon("lock") }}Пароль</a>
+    <a href="#about">{{ L.icon("info") }}О программе</a>
+  </nav>
+
+  <main class="set-main">
+
+    <!-- Экран блокировки (если задан пароль) -->
+    <div class="lock-screen" id="lock-screen">
+      <div class="big">{{ L.icon("lock") }}</div>
+      <h2>Настройки защищены паролем</h2>
+      <p>Работать с новостями можно без пароля. Чтобы менять настройки — введите его.</p>
+      <div class="r">
+        <input type="password" class="set-in" id="unlock-pw" placeholder="Пароль" autocomplete="current-password"
+               onkeydown="if(event.key==='Enter')unlock()">
+        <button class="btn primary" onclick="unlock()">Открыть</button>
+      </div>
+      <div class="set-note err" id="unlock-err" style="margin-top:10px"></div>
+    </div>
+
+    <!-- ═════════ НАЧАЛО РАБОТЫ ═════════ -->
+    <section class="set-sec" id="sec-welcome">
+      <div class="set-h"><h2>Добро пожаловать</h2>
+        <p>Всё, что раньше настраивалось в файлах и терминалах, теперь здесь. Два шага — и можно работать.
+          Открыть это окно в любой момент: <b>Настройки</b> в шапке или <b>Ctrl+,</b> (на Mac <b>⌘,</b>).</p></div>
+      <div class="fx-flow" id="fx-flow" aria-label="Как идут новости: сайты и Telegram → Space Digest → ChatGPT → DOCX"></div>
+      <div class="welcome-grid">
+        <div class="w-card">
+          <div class="n">1</div>
+          <h3>Перенести данные из старой версии</h3>
+          <p>Укажите папку «ВЕРСИЯ 2» (где лежат <span class="mono">САЙТЫ\space_parser</span> и
+            <span class="mono">ТГ\tg_news_site</span>). Перенесутся история, недельная база, свои источники,
+            ключи Telegram, вход в Telegram и все посты. Старая папка не изменяется.</p>
+          <div class="step-row"><button class="btn primary" onclick="importOld('w-import-report')">Выбрать папку…</button>
+            <span class="set-note">можно пропустить</span></div>
+          <div class="report" id="w-import-report"></div>
+        </div>
+        <div class="w-card">
+          <div class="n">2</div>
+          <h3>Подключить Telegram</h3>
+          <p>Нужны API ID и API Hash (берутся один раз на my.telegram.org) и вход по коду из Telegram —
+            прямо здесь, без терминала. Если перенесли данные из старой версии, всё уже подключено.</p>
+          <div class="step-row"><a class="btn" href="#telegram">Открыть настройки Telegram</a>
+            <span class="pill" id="w-tg-state">…</span></div>
+        </div>
+      </div>
+      <div><button class="btn primary" onclick="finishWelcome()">Готово — начать работу →</button></div>
+    </section>
+
+    <!-- ═════════ ОБЩИЕ ═════════ -->
+    <section class="set-sec" id="sec-general">
+      <div class="set-h"><h2>Общие</h2><p>Как открывается программа и как ведёт себя парсер сайтов.</p></div>
+      <div class="set-group">
+        <div class="set-row">
+          <div class="set-lbl">Где открывать интерфейс
+            <small>«Окно» — отдельное окно программы. «Браузер» — вкладка в браузере по умолчанию
+              (выйти из программы — в разделе «О программе»). Применяется при следующем запуске.</small></div>
+          <div class="set-ctl"><div class="seg" id="open_in">
+            <button data-v="window">Окно</button><button data-v="browser">Браузер</button></div></div>
+        </div>
+        <div class="set-row">
+          <div class="set-lbl">Тема оформления <small>Светлая бело-синяя, тёмная или как в системе.</small></div>
+          <div class="set-ctl"><div class="seg" id="gen_theme">
+            <button data-v="light">Светлая</button><button data-v="dark">Тёмная</button><button data-v="system">Как в системе</button></div></div>
+        </div>
+        <div class="set-row">
+          <div class="set-lbl">Анимации интерфейса
+            <small>Подвижный фон, подсветка карточек, скользящие переключатели. Выключите на слабом компьютере.</small></div>
+          <div class="set-ctl"><label class="switch"><input type="checkbox" id="gen_fx"><span class="slider"></span></label></div>
+        </div>
+        <div class="set-row">
+          <div class="set-lbl">Стартовая страница</div>
+          <div class="set-ctl"><select class="set-in" id="start_page" style="width:200px">
+            <option value="/home">Обзор</option>
+            <option value="/export">Выгрузка</option>
+            <option value="/">Сайты</option><option value="/tg">Telegram</option>
+            <option value="/dedup">Дедупликатор</option></select></div>
+        </div>
+      </div>
+      <div class="set-group">
+        <div class="set-group-t">Автоматический сбор</div>
+        <div class="set-row">
+          <div class="set-lbl">Собирать сайты в фоне
+            <small>Пока программа открыта, все включённые RSS-ленты опрашиваются сами, полный текст
+              новостей складывается в базу. Неизменившиеся ленты не скачиваются заново.</small></div>
+          <div class="set-ctl"><label class="switch"><input type="checkbox" id="sites_auto"><span class="slider"></span></label></div>
+        </div>
+        <div class="set-row">
+          <div class="set-lbl">Интервал, минут</div>
+          <div class="set-ctl"><input type="number" class="set-in w-s" id="sites_min" min="15" max="1440"></div>
+        </div>
+        <div class="set-row">
+          <div class="set-lbl">Полный текст статей
+            <small>Если лента сайта даёт только анонс, программа откроет страницу статьи и возьмёт
+              основной текст (без меню, рекламы и комментариев). ChatGPT получит все факты.</small></div>
+          <div class="set-ctl"><label class="switch"><input type="checkbox" id="ft_on"><span class="slider"></span></label></div>
+        </div>
+        <div class="set-row">
+          <div class="set-lbl">Считать анонсом текст короче, символов</div>
+          <div class="set-ctl"><input type="number" class="set-in w-s" id="ft_min" min="100" max="5000"></div>
+        </div>
+        <div class="set-row">
+          <div class="set-lbl">За последние 7 дней <small id="ft_stats">…</small></div>
+          <div class="set-ctl"><button class="btn" id="ft_btn" onclick="fulltextBackfill()">Дотянуть полные тексты</button></div>
+        </div>
+      </div>
+      <div class="set-group">
+        <div class="set-group-t">Парсинг сайтов</div>
+        <div class="set-row">
+          <div class="set-lbl">Таймаут запроса к ленте, сек
+            <small>Сколько ждать ответа одного сайта. Медленные сайты — увеличьте.</small></div>
+          <div class="set-ctl"><input type="number" class="set-in w-s" id="fetch_timeout" min="3" max="120"></div>
+        </div>
+        <div class="set-row">
+          <div class="set-lbl">Пауза между источниками, сек
+            <small>Вежливая задержка, чтобы сайты не блокировали частые запросы.</small></div>
+          <div class="set-ctl"><input type="number" class="set-in w-s" id="fetch_delay" min="0" max="10" step="0.5"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ═════════ ВЫГРУЗКА И CHATGPT ═════════ -->
+    <section class="set-sec" id="sec-export">
+      <div class="set-h"><h2>Выгрузка и ChatGPT</h2>
+        <p>Как готовится ежедневный файл для ChatGPT: что в него попадает, куда он сохраняется
+          и каким промптом обрабатывается.</p></div>
+      <div class="set-group">
+        <div class="set-group-t">Утренняя выгрузка</div>
+        <div class="set-row">
+          <div class="set-lbl">Готовить выгрузку каждое утро
+            <small>В указанное время программа соберёт сайты и Telegram, дотянет полные тексты, уберёт повторы
+              и подготовит CSV с промптом «с прошлой выгрузки». Придёт уведомление — останется открыть ChatGPT.
+              Если компьютер был выключен, выгрузка подготовится при запуске программы.</small></div>
+          <div class="set-ctl"><label class="switch"><input type="checkbox" id="mo_on"><span class="slider"></span></label></div>
+        </div>
+        <div class="set-row">
+          <div class="set-lbl">Время, по Москве <small id="mo_state">…</small></div>
+          <div class="set-ctl"><input type="time" class="set-in w-s" id="mo_time" step="300"></div>
+        </div>
+        <div class="set-row">
+          <div class="set-lbl">Уведомление, когда готово</div>
+          <div class="set-ctl"><label class="switch"><input type="checkbox" id="mo_notify"><span class="slider"></span></label></div>
+        </div>
+        <div class="set-row">
+          <div class="set-lbl">Запускать вместе с компьютером
+            <small>Программа стартует свёрнутой при входе в систему — к утру выгрузка будет готова без вашего участия.</small></div>
+          <div class="set-ctl"><label class="switch"><input type="checkbox" id="gen_autostart"><span class="slider"></span></label></div>
+        </div>
+        <div class="set-row">
+          <div class="set-lbl">Проверить прямо сейчас <small>Соберёт новости и подготовит выгрузку так же, как утром.</small></div>
+          <div class="set-ctl"><button class="btn" id="mo_run" onclick="morningRun()">Запустить</button></div>
+        </div>
+      </div>
+      <div class="set-group">
+        <div class="set-row">
+          <div class="set-lbl">Убирать повторы перед выгрузкой
+            <small>Одно событие с разных сайтов и каналов — одна строка файла: полный текст основной версии
+              и новые факты из остальных. ChatGPT не тратит силы на дубли и не теряет подробности.</small></div>
+          <div class="set-ctl"><label class="switch"><input type="checkbox" id="ex_dedup"><span class="slider"></span></label></div>
+        </div>
+        <div class="set-row">
+          <div class="set-lbl">Сверять с прошлыми выгрузками, дней
+            <small>Новость о событии, уже попавшем в выгрузку за эти дни, не повторится. 0 — не сверять.
+              Заменяет ручную «недельную базу».</small></div>
+          <div class="set-ctl"><input type="number" class="set-in w-s" id="ex_ref_days" min="0" max="30"></div>
+        </div>
+        <div class="set-row">
+          <div class="set-lbl">Папка выгрузок
+            <small>Пусто — «Документы / Space Digest / Выгрузки». Для каждой выгрузки создаётся своя папка:
+              CSV, промпт и готовый DOCX.</small></div>
+          <div class="set-ctl"><input class="set-in w-m" id="ex_folder" placeholder="по умолчанию">
+            <button class="btn" onclick="pickExportFolder()">Выбрать…</button></div>
+        </div>
+      </div>
+      <div class="set-group">
+        <div class="set-group-t">ChatGPT</div>
+        <div class="set-row">
+          <div class="set-lbl">Где открывать
+            <small>«В программе» — отдельное окно рядом, вход запоминается. Если войти не получается
+              (например, вход через Google), выберите «В браузере».</small></div>
+          <div class="set-ctl"><div class="seg" id="ex_gpt_where">
+            <button data-v="app">В программе</button><button data-v="browser">В браузере</button></div></div>
+        </div>
+        <div class="set-row">
+          <div class="set-lbl">Адрес чата <small>Можно указать ссылку на свой проект или GPT в ChatGPT.</small></div>
+          <div class="set-ctl"><input class="set-in w-l" id="ex_gpt_url"></div>
+        </div>
+      </div>
+      <div class="set-group">
+        <div class="set-group-t">Промпт</div>
+        <div class="set-row col">
+          <div class="set-lbl">Текст промпта <span class="pill" id="ex_prompt_state">…</span>
+            <small>Вместо <b>{{ПЕРИОД}}</b> программа подставит даты новостей из выгрузки
+              (например, «2026-11-13 - 2026-11-14»). Больше ничего менять перед отправкой не нужно.</small></div>
+          <textarea class="set-in w-full" id="ex_prompt" rows="14" style="font-family:var(--mono);font-size:11.5px;line-height:1.5;resize:vertical"></textarea>
+          <div class="step-row"><button class="btn primary" onclick="savePrompt()">Сохранить промпт</button>
+            <button class="btn" onclick="resetPrompt()">Вернуть по умолчанию</button></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ═════════ ФИЛЬТР МУСОРА ═════════ -->
+    <section class="set-sec" id="sec-filter">
+      <div class="set-h"><h2>Фильтр мусора</h2>
+        <p>Реклама и новости не про космос не попадают в файл для ChatGPT. Ничего не удаляется:
+          отсеянное видно во вкладке «Отфильтровано» на экране выгрузки и возвращается одной кнопкой.</p></div>
+      <div class="set-group">
+        <div class="set-row">
+          <div class="set-lbl">Фильтровать перед выгрузкой
+            <small>Выключите, если хотите отдавать ChatGPT всё подряд.</small></div>
+          <div class="set-ctl"><label class="switch"><input type="checkbox" id="fl_on"><span class="slider"></span></label></div>
+        </div>
+      </div>
+      <div class="set-group">
+        <div class="set-group-t">«Только про космос» по источникам</div>
+        <div class="set-row col">
+          <div class="set-lbl">Для лент общего профиля
+            <small>Новость такого источника попадёт в выгрузку, только если в ней есть космическое слово
+              (список ниже). Доля «не про космос» — за последние 30 дней. <b>Рекомендуем</b> — где таких больше 40 %.</small></div>
+          <div class="step-row"><button class="btn primary" id="fl_rec_btn" onclick="enableRecommended()">Включить для рекомендованных</button>
+            <span class="set-note" id="fl_src_note"></span></div>
+          <div class="table-scroll" style="max-height:380px;border:1px solid var(--border);border-radius:var(--r-md)">
+            <table class="news-table"><tbody id="fl_sources"><tr><td class="set-note" style="padding:14px">Загрузка…</td></tr></tbody></table>
+          </div>
+        </div>
+      </div>
+      <div class="set-group">
+        <div class="set-group-t">Слова</div>
+        <div class="set-row col">
+          <div class="set-lbl">Как писать
+            <small><b>ракет*</b> — слово и все его формы · <b>ESA</b> — только целое слово ·
+              <b>магнитн* бур*</b> — фраза · строка с «# » в начале — комментарий. Регистр не важен.</small></div>
+        </div>
+        <div class="set-row col">
+          <div class="set-lbl">Стоп-слова — для всех источников <span class="pill" id="fl_stop_state">…</span>
+            <small>Новость с таким словом не попадёт в выгрузку. По умолчанию — реклама (метка erid), промокоды, розыгрыши.</small></div>
+          <textarea class="set-in w-full" id="fl_stop" rows="7" style="font-family:var(--mono);font-size:11.5px;line-height:1.5;resize:vertical"></textarea>
+          <div class="step-row"><button class="btn primary" onclick="saveWords('stop')">Сохранить</button>
+            <button class="btn" onclick="resetWords('stop')">Вернуть по умолчанию</button></div>
+        </div>
+        <div class="set-row col">
+          <div class="set-lbl">Космические слова <span class="pill" id="fl_topic_state">…</span>
+            <small>Нужны только источникам с «только про космос»: если ни одного слова нет — новость отсеивается.
+              Если фильтр отсеял нужную новость — добавьте сюда слово из неё.</small></div>
+          <textarea class="set-in w-full" id="fl_topic" rows="10" style="font-family:var(--mono);font-size:11.5px;line-height:1.5;resize:vertical"></textarea>
+          <div class="step-row"><button class="btn primary" onclick="saveWords('topic')">Сохранить</button>
+            <button class="btn" onclick="resetWords('topic')">Вернуть по умолчанию</button></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ═════════ ИСТОЧНИКИ ═════════ -->
+    <section class="set-sec" id="sec-sources">
+      <div class="set-h"><h2>Источники сайтов</h2>
+        <p>Переключатель — «отмечен по умолчанию» на странице «Сайты». Встроенные источники можно выключить,
+          свои — добавить, изменить и удалить. Кнопка «Проверить» проверяет, отдаёт ли лента новости.</p></div>
+      <div class="set-group">
+        <div class="src-toolbar">
+          <input class="set-in" id="src-search" placeholder="Поиск по названию или адресу…" oninput="renderSources()">
+          <select class="set-in" id="src-cat" style="width:190px" onchange="renderSources()"></select>
+          <button class="btn primary" onclick="toggleAdd()">+ Добавить</button>
+        </div>
+        <div class="add-form" id="add-form">
+          <input type="hidden" id="ns-id">
+          <div class="r"><input class="set-in" id="ns-name" placeholder="Название источника">
+            <input class="set-in" id="ns-url" placeholder="Адрес RSS/Atom-ленты (https://…/feed/)"></div>
+          <div class="r"><input class="set-in" id="ns-region" placeholder="Регион (необязательно)">
+            <select class="set-in" id="ns-cat"></select></div>
+          <div class="step-row"><button class="btn" onclick="testNew()">Проверить ленту</button>
+            <span class="set-note" id="ns-test"></span>
+            <span style="flex:1"></span>
+            <button class="btn" onclick="toggleAdd(false)">Отмена</button>
+            <button class="btn primary" id="ns-save" onclick="saveSource()">Добавить</button></div>
+        </div>
+        <div class="src-scroll"><table class="src-table"><tbody id="src-body"></tbody></table></div>
+        <div class="set-row"><div class="set-note" id="src-summary"></div></div>
+      </div>
+    </section>
+
+    <!-- ═════════ TELEGRAM ═════════ -->
+    <section class="set-sec" id="sec-telegram">
+      <div class="set-h"><h2>Telegram</h2>
+        <p>Посты каналов собираются прямо в программе — отдельный сервер и терминал больше не нужны.</p></div>
+
+      <div class="set-group">
+        <div class="set-group-t">Аккаунт</div>
+        <div class="set-row">
+          <div class="set-lbl" id="tg-acc-line">Проверка…</div>
+          <div class="set-ctl" id="tg-acc-actions"></div>
+        </div>
+        <div class="set-row col" id="tg-login" style="display:none">
+          <div class="set-note">Код придёт в приложение Telegram (чат «Telegram»), не по SMS.</div>
+          <div class="steps">
+            <div class="step-row" id="st-phone"><input class="set-in w-m" id="tg-phone" placeholder="+7 999 123-45-67">
+              <button class="btn primary" onclick="tgSendCode(this)">Получить код</button></div>
+            <div class="step-row" id="st-code" style="display:none"><input class="set-in w-s" id="tg-code" placeholder="12345"
+              onkeydown="if(event.key==='Enter')tgVerify(this)">
+              <button class="btn primary" onclick="tgVerify(this)">Войти</button>
+              <button class="btn" onclick="tgResetLogin()">Другой номер</button></div>
+            <div class="step-row" id="st-pass" style="display:none"><input type="password" class="set-in w-m" id="tg-pass"
+              placeholder="Пароль двухэтапной проверки" onkeydown="if(event.key==='Enter')tgPassword(this)">
+              <button class="btn primary" onclick="tgPassword(this)">Подтвердить</button></div>
+          </div>
+          <div class="set-note err" id="tg-login-err"></div>
+        </div>
+      </div>
+
+      <div class="set-group">
+        <div class="set-group-t">Ключи API</div>
+        <div class="set-row">
+          <div class="set-lbl">API ID и API Hash
+            <small>Один раз: зайдите на <a onclick="openExternal('https://my.telegram.org/apps')">my.telegram.org</a>
+              → «API development tools» → создайте приложение (название любое) → скопируйте два значения сюда.</small></div>
+        </div>
+        <div class="set-row">
+          <div class="set-lbl">API ID</div>
+          <div class="set-ctl"><input class="set-in w-m" id="tg_api_id" placeholder="12345678" inputmode="numeric"></div>
+        </div>
+        <div class="set-row">
+          <div class="set-lbl">API Hash</div>
+          <div class="set-ctl"><input type="password" class="set-in w-l" id="tg_api_hash" placeholder="abcdef0123456789…">
+            <button class="btn" onclick="togglePw('tg_api_hash',this)">👁</button></div>
+        </div>
+      </div>
+
+      <div class="set-group">
+        <div class="set-group-t">Каналы</div>
+        <div class="set-row">
+          <div class="set-lbl">Добавить канал <small>@имя или ссылка t.me/имя. Новый канал соберётся при ближайшем обновлении.</small></div>
+          <div class="set-ctl"><input class="set-in w-m" id="ch-input" placeholder="@roscosmos_press"
+            onkeydown="if(event.key==='Enter')addChannel()"><button class="btn primary" onclick="addChannel()">Добавить</button></div>
+        </div>
+        <div class="set-row col">
+          <div class="set-lbl">Мои каналы</div>
+          <div class="chips" id="ch-list"></div>
+        </div>
+        <div class="set-row col" id="ch-db-row">
+          <div class="set-lbl">Уже есть в базе <small>Каналы, по которым собраны посты. Они тоже обновляются.</small></div>
+          <div class="chips" id="ch-db"></div>
+        </div>
+      </div>
+
+      <div class="set-group">
+        <div class="set-group-t">Сбор постов</div>
+        <div class="set-row">
+          <div class="set-lbl">Глубина сбора, дней <small>За сколько последних дней докачивать посты при обновлении.</small></div>
+          <div class="set-ctl"><input type="number" class="set-in w-s" id="tg_lookback" min="1" max="90"></div>
+        </div>
+        <div class="set-row">
+          <div class="set-lbl">Автоматический сбор в фоне
+            <small>Пока программа открыта, посты докачиваются сами. Кнопка «Обновить из Telegram» тоже работает.</small></div>
+          <div class="set-ctl"><label class="switch"><input type="checkbox" id="tg_auto"><span class="slider"></span></label></div>
+        </div>
+        <div class="set-row">
+          <div class="set-lbl">Интервал автосбора, минут</div>
+          <div class="set-ctl"><input type="number" class="set-in w-s" id="tg_poll" min="5" max="1440"></div>
+        </div>
+        <div class="set-row">
+          <div class="set-lbl">Обновить сейчас <small id="tg-refresh-note">—</small></div>
+          <div class="set-ctl"><button class="btn" id="tg-refresh-btn" onclick="tgRefresh()">Обновить из Telegram</button></div>
+        </div>
+        <div class="set-row">
+          <div class="set-lbl">Добавить посты из файла news.db
+            <small>Например, из старой версии или с другого компьютера. Повторы пропускаются.</small></div>
+          <div class="set-ctl"><button class="btn" onclick="importDb()">Выбрать файл…</button></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ═════════ ПЕРЕВОД ═════════ -->
+    <section class="set-sec" id="sec-translation">
+      <div class="set-h"><h2>Перевод</h2><p>Используется на всех страницах — ключ больше не нужно вводить каждый раз.</p></div>
+      <div class="set-group">
+        <div class="set-row">
+          <div class="set-lbl">Переводить на русский по умолчанию
+            <small>Тумблер «Переводить» на страницах будет включён сразу.</small></div>
+          <div class="set-ctl"><label class="switch"><input type="checkbox" id="tr_default"><span class="slider"></span></label></div>
+        </div>
+        <div class="set-row">
+          <div class="set-lbl">Сервис перевода
+            <small>Google — бесплатно, без ключа. DeepL — выше качество, нужен ключ (бесплатный тариф ≈ 500 000 символов в месяц).</small></div>
+          <div class="set-ctl"><div class="seg" id="tr_provider">
+            <button data-v="google">Google</button><button data-v="deepl">DeepL</button></div></div>
+        </div>
+        <div class="set-row" id="deepl-row">
+          <div class="set-lbl">Ключ DeepL API <small>Если ключ не задан, используется Google.</small></div>
+          <div class="set-ctl"><input type="password" class="set-in w-l" id="tr_key" placeholder="xxxxxxxx-xxxx-…:fx">
+            <button class="btn" onclick="togglePw('tr_key',this)">👁</button></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ═════════ ДЕДУПЛИКАТОР ═════════ -->
+    <section class="set-sec" id="sec-dedup">
+      <div class="set-h"><h2>Дедупликатор</h2><p>Значения по умолчанию — их всё равно можно поменять перед запуском.</p></div>
+      <div class="set-group">
+        <div class="set-row">
+          <div class="set-lbl">Движок сравнения
+            <small>Нейросеть понимает «одно событие разными словами», в том числе RU ↔ EN.
+              TF-IDF — быстрый запасной вариант, сравнивает по словам.</small></div>
+          <div class="set-ctl"><select class="set-in" id="dd_engine" style="width:240px">
+            <option value="auto">Нейросеть (рекомендуется)</option>
+            <option value="tfidf">TF-IDF (без модели)</option></select></div>
+        </div>
+        <div class="set-row">
+          <div class="set-lbl">Нейросетевая модель <small id="model-note">…</small></div>
+          <div class="set-ctl"><span class="pill" id="model-pill">…</span>
+            <button class="btn" id="model-btn" onclick="downloadModel()">Скачать (~220 МБ)</button></div>
+        </div>
+        <div class="set-row">
+          <div class="set-lbl">Порог близости <small>Выше — строже. 0.80–0.85 — хорошая отправная точка.</small></div>
+          <div class="set-ctl"><input type="range" id="dd_threshold" min="0.60" max="0.95" step="0.01" style="width:200px">
+            <span class="mono" id="dd_thr_val" style="width:36px">—</span></div>
+        </div>
+        <div class="set-row col">
+          <div class="set-lbl">Подобрать порог по моим данным
+            <small>Программа покажет около 20 пар свежих новостей «на грани». Отвечайте, одно ли это событие —
+              по ответам будет выбран порог с наименьшим числом ошибок. Около трёх минут; клавиши
+              <b>1</b> — одно событие, <b>2</b> — разные, <b>3</b> — не уверен.</small></div>
+          <div class="step-row"><button class="btn primary" id="cal_start" onclick="calStart()">Начать подбор</button>
+            <span class="set-note" id="cal_note"></span></div>
+          <div class="cal" id="cal" style="display:none">
+            <div class="cal-top"><span id="cal_prog">—</span><div class="cal-bar"><i id="cal_bar"></i></div></div>
+            <div class="cal-pair">
+              <div class="cal-card" id="cal_a"></div>
+              <div class="cal-vs">?</div>
+              <div class="cal-card" id="cal_b"></div>
+            </div>
+            <div class="cal-act">
+              <button class="btn primary" onclick="calAnswer(true)">1 · Одно событие</button>
+              <button class="btn" onclick="calAnswer(false)">2 · Разные события</button>
+              <button class="btn" onclick="calAnswer(null)">3 · Не уверен</button>
+              <button class="btn" style="margin-left:auto" onclick="calFinish()">Закончить</button>
+            </div>
+          </div>
+          <div class="cal-res" id="cal_res" style="display:none"></div>
+        </div>
+        <div class="set-row">
+          <div class="set-lbl">Перекрёстная сверка <small>Искать дубли между всеми наборами вместе (иначе — каждый отдельно).</small></div>
+          <div class="set-ctl"><label class="switch"><input type="checkbox" id="dd_cross"><span class="slider"></span></label></div>
+        </div>
+        <div class="set-row">
+          <div class="set-lbl">Файл — архив <small>При совпадении с загруженным CSV оставлять запись из файла.</small></div>
+          <div class="set-ctl"><label class="switch"><input type="checkbox" id="dd_prefer"><span class="slider"></span></label></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ═════════ ДАННЫЕ ═════════ -->
+    <section class="set-sec" id="sec-data">
+      <div class="set-h"><h2>Данные</h2><p>История, недельная база, посты Telegram и настройки хранятся в одной папке.</p></div>
+      <div class="set-group">
+        <div class="set-row col">
+          <div class="set-lbl">Папка данных <small id="data-stats">…</small></div>
+          <div class="mono" id="data-dir">…</div>
+          <div class="step-row">
+            <button class="btn" onclick="openDataDir()">Открыть</button>
+            <button class="btn" onclick="moveDataDir()">Перенести…</button>
+            <button class="btn" id="data-default-btn" onclick="resetDataDir()">Вернуть стандартную</button>
+          </div>
+          <div class="set-note">Перенос пригодится, например, чтобы держать данные в облачной папке (OneDrive, iCloud, Яндекс Диск).
+            Данные копируются, новая папка начинает работать после перезапуска.</div>
+        </div>
+        <div class="set-row">
+          <div class="set-lbl">Резервная копия <small>ZIP со всей базой новостей, выгрузками, недельной базой и настройками.
+            Без входа в Telegram и ChatGPT. Копию можно перенести на другой компьютер.</small></div>
+          <div class="set-ctl"><button class="btn" onclick="downloadUrl('/api/data/backup','резервную копию')">Скачать ZIP</button></div>
+        </div>
+        <div class="set-row">
+          <div class="set-lbl">Восстановить из копии <small id="restore-note">Применится при следующем запуске; текущие данные
+            не удаляются, а откладываются в папку «_до_восстановления_…».</small></div>
+          <div class="set-ctl"><input type="file" id="restore-file" accept=".zip" style="display:none" onchange="restoreBackup(this)">
+            <button class="btn" onclick="$('restore-file').click()">Выбрать ZIP…</button></div>
+        </div>
+        <div class="set-row col">
+          <div class="set-lbl">Перенести из старой версии <small>Папка «ВЕРСИЯ 2» с space_parser и tg_news_site. Можно повторять — дубли не появятся.</small></div>
+          <div class="step-row"><button class="btn" onclick="importOld('d-import-report')">Выбрать папку…</button></div>
+          <div class="report" id="d-import-report"></div>
+        </div>
+      </div>
+
+      <div class="set-group">
+        <div class="set-group-t">Недельная база</div>
+        <div class="set-row col">
+          <div class="chips" id="weeks-list" style="flex-direction:column;gap:0"></div>
+        </div>
+        <div class="set-row">
+          <div class="set-lbl">Очистить всю недельную базу <small>Удаляет все недели безвозвратно.</small></div>
+          <div class="set-ctl"><button class="btn danger" onclick="clearWeeks()">Очистить</button></div>
+        </div>
+      </div>
+
+      <div class="set-group">
+        <div class="set-group-t">История</div>
+        <div class="set-row">
+          <div class="set-lbl">Очистить историю <small id="hist-stats">Выгрузки, дедупликации и TG-выборки. Недельная база и посты не затрагиваются.</small></div>
+          <div class="set-ctl"><button class="btn danger" onclick="clearHistory()">Очистить</button></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ═════════ ПАРОЛЬ ═════════ -->
+    <section class="set-sec" id="sec-security">
+      <div class="set-h"><h2>Пароль</h2>
+        <p>Пароль закрывает только эти настройки. Парсинг, сбор, дедупликация, выгрузка и недельная база работают без пароля.</p></div>
+      <div class="set-group">
+        <div class="set-row">
+          <div class="set-lbl">Состояние</div>
+          <div class="set-ctl"><span class="pill" id="pw-state">…</span></div>
+        </div>
+        <div class="set-row">
+          <div class="set-lbl">Новый пароль</div>
+          <div class="set-ctl"><input type="password" class="set-in w-m" id="pw1" autocomplete="new-password"></div>
+        </div>
+        <div class="set-row">
+          <div class="set-lbl">Повторите</div>
+          <div class="set-ctl"><input type="password" class="set-in w-m" id="pw2" autocomplete="new-password"
+            onkeydown="if(event.key==='Enter')setPassword()"></div>
+        </div>
+        <div class="set-row">
+          <div class="set-lbl"><span class="set-note err" id="pw-err"></span></div>
+          <div class="set-ctl">
+            <button class="btn danger" id="pw-remove" onclick="removePassword()">Убрать пароль</button>
+            <button class="btn" id="pw-lock" onclick="lockNow()">Закрыть сейчас</button>
+            <button class="btn primary" onclick="setPassword()">Сохранить пароль</button></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ═════════ О ПРОГРАММЕ ═════════ -->
+    <section class="set-sec" id="sec-about">
+      <div class="set-h"><h2>О программе</h2></div>
+      <div class="set-group">
+        <div class="set-row"><div class="set-lbl"><b id="ab-name">Space Digest</b>
+          <small>Система обработки новостей: парсер сайтов, Telegram, дедупликатор, недельная база.</small></div>
+          <div class="set-ctl"><span class="pill" id="ab-ver">—</span></div></div>
+      </div>
+      <div class="set-group">
+        <div class="set-group-t">Обновления</div>
+        <div class="set-row">
+          <div class="set-lbl">Репозиторий на GitHub
+            <small>Где собираются установщики (owner/name). Данные лежат отдельно от программы —
+              установка новой версии их не трогает.</small></div>
+          <div class="set-ctl"><input class="set-in w-m" id="up_repo" placeholder="например, ivanov/space-digest"></div>
+        </div>
+        <div class="set-row">
+          <div class="set-lbl">Проверять при запуске <small>Не чаще раза в 6 часов; о новой версии скажет значок в шапке.</small></div>
+          <div class="set-ctl"><label class="switch"><input type="checkbox" id="up_auto"><span class="slider"></span></label></div>
+        </div>
+        <div class="set-row">
+          <div class="set-lbl">Версия <small id="up_state">—</small></div>
+          <div class="set-ctl"><button class="btn" onclick="checkUpdate(true)">Проверить обновления</button>
+            <button class="btn primary" id="up_install" style="display:none" onclick="installUpdate()">Скачать и установить</button></div>
+        </div>
+        <div class="set-row"><div class="set-lbl">Сочетания клавиш
+          <small><b>Ctrl+,</b> / <b>⌘,</b> — Настройки · <b>Ctrl+R</b> / <b>⌘R</b> — обновить страницу</small></div></div>
+        <div class="set-row"><div class="set-lbl">Журнал работы <small class="mono" id="ab-log">—</small></div></div>
+        <div class="set-row" id="quit-row"><div class="set-lbl">Выйти из программы
+          <small>В режиме «в браузере» программа работает в фоне — здесь её можно закрыть.</small></div>
+          <div class="set-ctl"><button class="btn danger" onclick="quitApp()">Выйти</button></div></div>
+      </div>
+    </section>
+  </main>
+</div>
+
+<script src="{{ url_for('static', filename='common.js') }}"></script>
+<script src="{{ url_for('static', filename='settings.js') }}"></script>
+</body>
+</html>

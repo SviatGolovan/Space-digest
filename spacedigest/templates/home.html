@@ -1,0 +1,68 @@
+{% import "_layout.html" as L %}
+<!DOCTYPE html>
+<html lang="ru" class="{{ 'fx' if fx_on }}" data-theme="{{ 'light' if theme == 'system' else theme }}" data-theme-pref="{{ theme }}">
+<head>
+{{ L.head("Обзор") }}
+</head>
+<body>
+<div class="layout layout-home">
+{{ L.header("home") }}
+
+  <main class="bento">
+    <!-- Главное на сейчас -->
+    <section class="card hero span-2" id="hero">
+      <div class="hero-hi" id="hero-hi">Добрый день</div>
+      <div class="hero-main" id="hero-main">Загрузка…</div>
+      <div class="hero-sub" id="hero-sub"></div>
+      <div class="hero-act" id="hero-act"></div>
+    </section>
+    <section class="stat tile"><div class="stat-val" id="t-rss">0</div><div class="stat-lbl">Сегодня с сайтов</div>
+      <div class="tile-sub" id="t-rss-sub"></div></section>
+    <section class="stat tile"><div class="stat-val" id="t-tg">0</div><div class="stat-lbl">Сегодня из Telegram</div>
+      <div class="tile-sub" id="t-tg-sub"></div></section>
+
+    <!-- Публикации за 14 дней -->
+    <section class="card span-2 chart-card">
+      <div class="card-head"><div class="card-title">Публикации за 14 дней</div>
+        <div class="legend"><span><i class="sw rss"></i>Сайты</span><span><i class="sw tg"></i>Telegram</span>
+          <button class="link-btn" id="chart-tbl-btn" onclick="toggleChartTable()">Таблица</button></div></div>
+      <div class="chart" id="chart" role="img" aria-label="Число публикаций по дням за 14 дней: сайты и Telegram"></div>
+      <div class="chart-table" id="chart-table" style="display:none"></div>
+    </section>
+
+    <!-- Источники -->
+    <section class="card">
+      <div class="card-head"><div class="card-title">Источники</div><a class="link-btn" href="/settings#sources">Все →</a></div>
+      <div class="health-sum" id="h-sum">…</div>
+      <ul class="health" id="h-list"></ul>
+    </section>
+
+    <!-- Утренняя выгрузка -->
+    <section class="card">
+      <div class="card-head"><div class="card-title">Утренняя выгрузка</div><a class="link-btn" href="/settings#export">Настроить →</a></div>
+      <div class="morning" id="m-box">…</div>
+    </section>
+
+    <!-- Последние выгрузки -->
+    <section class="card span-2">
+      <div class="card-head"><div class="card-title">Последние выгрузки</div><a class="link-btn" href="/export">Экран выгрузки →</a></div>
+      <ol class="timeline" id="ex-list"></ol>
+    </section>
+
+    <!-- Активнее всего сегодня -->
+    <section class="card">
+      <div class="card-head"><div class="card-title">Активнее всего сегодня</div></div>
+      <ul class="top" id="top-list"></ul>
+    </section>
+
+    <!-- Качество -->
+    <section class="card">
+      <div class="card-head"><div class="card-title">Качество данных</div></div>
+      <div class="quality" id="q-box"></div>
+    </section>
+  </main>
+</div>
+<script src="{{ url_for('static', filename='common.js') }}"></script>
+<script src="{{ url_for('static', filename='home.js') }}"></script>
+</body>
+</html>
