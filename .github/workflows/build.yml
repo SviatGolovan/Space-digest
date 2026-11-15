@@ -1,0 +1,105 @@
+# Собирает установщики Space Digest для Windows и macOS на серверах GitHub.
+# Запуск: вкладка Actions → «Build installers» → Run workflow.
+# Готовые файлы — внизу страницы запуска, в разделе Artifacts.
+# Если отправить тег вида v4.0.0 — файлы ещё и прикрепятся к Release.
+name: Build installers
+
+on:
+  workflow_dispatch:
+  push:
+    tags: ["v*"]
+
+jobs:
+  windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: requirements*.txt
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements-build.txt
+      - name: Tests
+        run: python -m pytest -q tests
+      - name: PyInstaller
+        run: pyinstaller packaging/SpaceDigest.spec --noconfirm --clean
+      - name: Smoke test (server starts)
+        shell: pwsh
+        run: |
+          $p = Start-Process -FilePath "dist\SpaceDigest\SpaceDigest.exe" -ArgumentList "--server","--port","5099","--data","$env:RUNNER_TEMP\sd" -PassThru
+          Start-Sleep -Seconds 15
+          $r = Invoke-WebRequest http://127.0.0.1:5099/api/app/info -UseBasicParsing
+          Write-Host $r.Content
+          Stop-Process -Id $p.Id -Force
+      - name: Inno Setup
+        shell: pwsh
+        run: |
+          choco install innosetup -y --no-progress
+          $v = python -c "from spacedigest import VERSION; print(VERSION)"
+          & "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe" "/DAppVersion=$v" packaging\windows\SpaceDigest.iss
+      - uses: actions/upload-artifact@v4
+        with:
+          name: SpaceDigest-Windows
+          path: dist/SpaceDigest-Setup-*.exe
+
+  macos:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - runner: macos-15          # Apple Silicon (M1–M4)
+            label: AppleSilicon
+          - runner: macos-15-intel    # Intel
+            label: Intel
+    runs-on: ${{ matrix.runner }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: requirements*.txt
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements-build.txt
+      - name: Tests
+        run: python -m pytest -q tests
+      - name: Build app and DMG
+        env:
+          # необязательно: подпись и нотаризация Apple (секреты репозитория)
+          APPLE_SIGN_IDENTITY: ${{ secrets.APPLE_SIGN_IDENTITY }}
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+          APPLE_APP_PASSWORD: ${{ secrets.APPLE_APP_PASSWORD }}
+        run: bash packaging/build_macos.sh --no-venv
+      - name: Smoke test (server starts)
+        run: |
+          "dist/Space Digest.app/Contents/MacOS/SpaceDigest" --server --port 5099 --data "$RUNNER_TEMP/sd" &
+          PID=$!
+          sleep 15
+          curl -sf http://127.0.0.1:5099/api/app/info
+          kill $PID || true
+      - uses: actions/upload-artifact@v4
+        with:
+          name: SpaceDigest-macOS-${{ matrix.label }}
+          path: dist/*.dmg
+
+  release:
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: [windows, macos]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: out
+          merge-multiple: true
+      - uses: softprops/action-gh-release@v2
+        with:
+          files: out/*
