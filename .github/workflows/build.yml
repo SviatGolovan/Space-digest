@@ -25,8 +25,19 @@ jobs:
           pip install -r requirements-build.txt
       - name: Tests
         run: python -m pytest -q tests
+      - name: Cache story model
+        uses: actions/cache@v4
+        with:
+          path: packaging/models
+          key: story-model-e5-small-v1
       - name: PyInstaller
         run: pyinstaller packaging/SpaceDigest.spec --noconfirm --clean
+      - name: Self-test (models inside the build)
+        shell: pwsh
+        run: |
+          $p = Start-Process -FilePath "dist\SpaceDigest\SpaceDigest.exe" -ArgumentList "--selftest","--data","$env:RUNNER_TEMP" -PassThru -Wait
+          Get-Content "$env:RUNNER_TEMP\selftest.txt"
+          if ($p.ExitCode -ne 0) { exit 1 }
       - name: Smoke test (server starts)
         shell: pwsh
         run: |
@@ -69,6 +80,11 @@ jobs:
           pip install -r requirements-build.txt
       - name: Tests
         run: python -m pytest -q tests
+      - name: Cache story model
+        uses: actions/cache@v4
+        with:
+          path: packaging/models
+          key: story-model-e5-small-v1
       - name: Build app and DMG
         env:
           # необязательно: подпись и нотаризация Apple (секреты репозитория)
@@ -77,6 +93,9 @@ jobs:
           APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
           APPLE_APP_PASSWORD: ${{ secrets.APPLE_APP_PASSWORD }}
         run: bash packaging/build_macos.sh --no-venv
+      - name: Self-test (models inside the build)
+        run: |
+          "dist/Space Digest.app/Contents/MacOS/SpaceDigest" --selftest --data "$RUNNER_TEMP"
       - name: Smoke test (server starts)
         run: |
           "dist/Space Digest.app/Contents/MacOS/SpaceDigest" --server --port 5099 --data "$RUNNER_TEMP/sd" &
