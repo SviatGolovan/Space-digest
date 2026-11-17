@@ -831,10 +831,8 @@ def api_dedup_result(dedup_id: str):
 @app.route("/api/dedup/engine")
 def api_dedup_engine():
     t = tasks.get("model")
-    from . import story_model
     return jsonify({"available": deduplicator.neural_available(),
                     "ready": deduplicator.neural_model_ready(),
-                    "story_ready": story_model.ready(),
                     "engine": settings.get("dedup", "engine"),
                     "task": {k: t[k] for k in ("status", "log")} if t else None})
 

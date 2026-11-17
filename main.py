@@ -268,25 +268,16 @@ def _wait_pid(pid: int, timeout: float = 30.0) -> None:
 
 
 def selftest() -> int:
-    """Проверка установщика в CI: встроенная модель сюжетов и движок склейки работают."""
-    os.environ["SPACEDIGEST_NO_MODEL_DOWNLOAD"] = "1"        # проверяем именно встроенную модель
+    """Проверка установщика в CI: движок склейки и «одного сюжета» (fastembed + onnxruntime) на месте."""
     lines, ok = [], True
     try:
-        from spacedigest import story_model
-        v = story_model.encode(["SpaceX catches Starship with the tower",
-                                "SpaceX поймала корабль Starship башней", "Курс рубля вырос"])
-        same, other = float(v[0] @ v[1]), float(v[0] @ v[2])
-        lines.append(f"story model: same={same:.3f} other={other:.3f} dir={story_model.model_dir()}")
-        ok &= same > other + 0.03
-    except Exception as e:                                       # noqa: BLE001
-        lines.append(f"story model: FAIL {e!r}")
-        ok = False
-    try:
+        import onnxruntime
         from spacedigest import deduplicator
-        lines.append(f"fastembed available: {deduplicator.neural_available()}")
-        ok &= deduplicator.neural_available()
+        avail = deduplicator.neural_available()
+        lines.append(f"onnxruntime {onnxruntime.__version__}; fastembed available: {avail}")
+        ok &= avail
     except Exception as e:                                       # noqa: BLE001
-        lines.append(f"fastembed: FAIL {e!r}")
+        lines.append(f"neural engine: FAIL {e!r}")
         ok = False
     text = "\n".join(lines + ["SELFTEST " + ("OK" if ok else "FAILED")])
     print(text)

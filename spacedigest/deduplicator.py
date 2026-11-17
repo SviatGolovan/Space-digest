@@ -97,6 +97,8 @@ def _get_fastembed(log: LogFn, force: bool = False):
     model = _MODEL_CACHE.get("fastembed")
     if model is None:
         ready = neural_model_ready()
+        if not ready and os.environ.get("SPACEDIGEST_NO_MODEL_DOWNLOAD"):   # тесты и проверка сборки
+            raise RuntimeError("нейросетевая модель не скачана")
         if not ready and not force and time.time() - _DOWNLOAD_FAILED_AT < _RETRY_AFTER:
             raise RuntimeError("модель не скачана, а недавняя попытка скачать не удалась "
                                "(Настройки → Дедупликатор → «Скачать»)")

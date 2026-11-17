@@ -98,10 +98,11 @@ class ExportService:
                  story_encoder: Optional[Callable] = None):
         assert profile in PROFILES, profile
         self.db = db
-        self.linker = StoryLinker(db, settings, encode=story_encoder)
+
         self.profile = profile
         self.section = "slk" if profile == "slk" else "export"
         self.vectors = vectors or VectorCache(db)
+        self.linker = StoryLinker(db, settings, encode=story_encoder, vectors=self.vectors, article=self._article)
         if profile == "slk":
             from .slk import SlkFilter
             self.filter = SlkFilter(db, settings)

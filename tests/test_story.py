@@ -81,7 +81,7 @@ def test_related_skipped_when_model_missing(db, repo, settings, tmp_path):  # no
                      RawItem("b", title="Two", url="https://s.test/b", published_at=NOW)])
     logs = []
     svc = ExportService(db, settings, deduper=fake_dedup, downloads_dir=tmp_path / "dl",
-                        export_root=tmp_path / "out")             # настоящая модель: в тестах не установлена
+                        export_root=tmp_path / "out")             # настоящая нейросеть: в тестах не скачана
     e = svc.prepare(mode="dates", date_from=NOW.date().isoformat(), date_to=NOW.date().isoformat(), log=logs.append)
     assert all(r[-1] == "" for r in read_csv(e["csv_file"])[1:])
-    assert any("модель сюжетов недоступна" in m for m in logs)
+    assert any("нейросеть недоступна" in m for m in logs)

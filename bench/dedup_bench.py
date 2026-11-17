@@ -32,7 +32,6 @@ import numpy as np
 MODELS = [
     # (имя, префикс для текстов, примерный вес ONNX int8 в установщике, комментарий)
     ("sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2", "", 120, "текущая"),
-    ("app:story_model", "", 120, "e5-small ONNX int8 — ровно как в программе"),
     ("intfloat/multilingual-e5-small", "query: ", 120, ""),
     ("intfloat/multilingual-e5-base", "query: ", 280, ""),
     ("sentence-transformers/paraphrase-multilingual-mpnet-base-v2", "", 280, ""),
@@ -63,16 +62,6 @@ def days_apart(a: dict, b: dict) -> float:
 
 
 def encode(model_name: str, prefix: str, texts: list[str]) -> np.ndarray:
-    if model_name == "app:story_model":
-        try:
-            import onnxruntime  # noqa: F401
-        except ImportError:
-            import subprocess
-            subprocess.run([sys.executable, "-m", "pip", "install", "-q", "onnxruntime", "tokenizers",
-                            "huggingface_hub"], check=True)
-        sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
-        from spacedigest import story_model
-        return story_model.encode(texts)
     from sentence_transformers import SentenceTransformer
     m = SentenceTransformer(model_name, device="cpu")
     emb = m.encode([prefix + t for t in texts], batch_size=32, normalize_embeddings=True,
@@ -221,9 +210,9 @@ def main():
                 f.write(f"| {r['model'].split('/')[-1]} {r['note']} | {r['text']} | {st['thr']:.2f} | {st['tp']} | "
                         f"{st['related']} | {st['tp'] + st['related']} из {n_same + n_rel} | {st['fp']} из {n_diff} | "
                         f"{st['unlabeled_above']} |\n")
-                for thr in (0.88, 0.90, 0.92, 0.94):
+                for thr in (0.74, 0.76, 0.78, 0.80):
                     c = next((x for x in r["curve"] if abs(x["thr"] - thr) < 1e-6), None)
-                    if c and "story_model" in r["model"]:
+                    if c and "MiniLM" in r["model"] and r["text"] == "title+300":
                         f.write(f"|  ↳ при {thr:.2f} | | | {c['tp']} | {c['related']} | {c['tp'] + c['related']} | "
                                 f"{c['fp']} | {c['unlabeled_above']} |\n")
 
