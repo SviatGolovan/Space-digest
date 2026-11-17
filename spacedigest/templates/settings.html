@@ -531,6 +531,27 @@
           <div class="set-ctl"><input type="range" id="dd_threshold" min="0.60" max="0.95" step="0.01" style="width:200px">
             <span class="mono" id="dd_thr_val" style="width:36px">—</span></div>
         </div>
+        <div class="set-row">
+          <div class="set-lbl">Окно склейки, дней
+            <small>Склеивать только новости, между которыми не больше стольких дней: похожие события
+              (еженедельные пуски) не сольются в одно. 0 — без окна.</small></div>
+          <div class="set-ctl"><input type="number" class="set-in w-s" id="dd_window" min="0" max="30"></div>
+        </div>
+        <div class="set-row">
+          <div class="set-lbl">Сверять номера в заголовках
+            <small>«Миссия 98» и «миссия 99», «Ship 41» и «Ship 42» — разные события, даже если тексты почти одинаковы.</small></div>
+          <div class="set-ctl"><label class="switch"><input type="checkbox" id="dd_guard"><span class="slider"></span></label></div>
+        </div>
+        <div class="set-row">
+          <div class="set-lbl">Столбец «Связанные строки»
+            <small>Отдельная модель (e5-small) отмечает строки одного сюжета — анонс, пуск, итоги. Они не склеиваются:
+              номера соседей идут в CSV подсказкой для ChatGPT. <span id="story-note"></span></small></div>
+          <div class="set-ctl"><label class="switch"><input type="checkbox" id="dd_related"><span class="slider"></span></label></div>
+        </div>
+        <div class="set-row">
+          <div class="set-lbl">Порог «один сюжет» <small>Ниже — больше подсказок и больше лишних. По замеру — 0.92.</small></div>
+          <div class="set-ctl"><input type="number" class="set-in w-s" id="dd_rel_thr" min="0.6" max="0.99" step="0.01"></div>
+        </div>
         <div class="set-row col">
           <div class="set-lbl">Подобрать порог по моим данным
             <small>Программа покажет около 20 пар свежих новостей «на грани». Отвечайте, одно ли это событие —

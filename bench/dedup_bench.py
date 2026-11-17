@@ -32,6 +32,7 @@ import numpy as np
 MODELS = [
     # (имя, префикс для текстов, примерный вес ONNX int8 в установщике, комментарий)
     ("sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2", "", 120, "текущая"),
+    ("app:story_model", "", 120, "e5-small ONNX int8 — ровно как в программе"),
     ("intfloat/multilingual-e5-small", "query: ", 120, ""),
     ("intfloat/multilingual-e5-base", "query: ", 280, ""),
     ("sentence-transformers/paraphrase-multilingual-mpnet-base-v2", "", 280, ""),
@@ -62,6 +63,16 @@ def days_apart(a: dict, b: dict) -> float:
 
 
 def encode(model_name: str, prefix: str, texts: list[str]) -> np.ndarray:
+    if model_name == "app:story_model":
+        try:
+            import onnxruntime  # noqa: F401
+        except ImportError:
+            import subprocess
+            subprocess.run([sys.executable, "-m", "pip", "install", "-q", "onnxruntime", "tokenizers",
+                            "huggingface_hub"], check=True)
+        sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
+        from spacedigest import story_model
+        return story_model.encode(texts)
     from sentence_transformers import SentenceTransformer
     m = SentenceTransformer(model_name, device="cpu")
     emb = m.encode([prefix + t for t in texts], batch_size=32, normalize_embeddings=True,
@@ -84,7 +95,7 @@ def evaluate(items, pairs, emb, window_days, use_guard):
             if nums[i] and nums[j] and not (nums[i] & nums[j]):
                 allowed[i, j] = False
     rows = []
-    for thr in np.round(np.arange(0.55, 0.96, 0.01), 2):
+    for thr in np.round(np.arange(0.55, 0.99, 0.01), 2):
         tp = fn = fp = rel = 0
         for (a, b), l in lab.items():
             hit = int(bool(allowed[a, b]) and float(sims[a, b]) >= thr)
@@ -98,6 +109,11 @@ def evaluate(items, pairs, emb, window_days, use_guard):
         unl = int(sum(1 for a, b in above if (int(a), int(b)) not in lab))
         rows.append({"thr": float(thr), "tp": tp, "fn": fn, "fp": fp, "related": rel, "unlabeled_above": unl})
     return sims, allowed, rows
+
+
+def best_story(rows):
+    """«Один сюжет»: находка — same или related, ошибка — diff. Подсказка, поэтому ошибка весит как пропуск."""
+    return max(rows, key=lambda r: (r["tp"] + r["related"] - r["fp"], -r["fp"]))
 
 
 def best(rows, n_same):
@@ -143,6 +159,8 @@ def main():
     items, pairs = load(args.folder)
     os.makedirs(args.out, exist_ok=True)
     n_same = sum(p["label"] == "same" for p in pairs)
+    n_rel = sum(p["label"] == "related" for p in pairs)
+    n_diff = sum(p["label"] == "diff" for p in pairs)
     pick = range(len(MODELS)) if args.models == "all" else [int(x) for x in args.models.split(",")]
     print(f"Новостей {len(items)}, пар {len(pairs)}: одно событие {n_same}, "
           f"один сюжет {sum(p['label'] == 'related' for p in pairs)}, разные {sum(p['label'] == 'diff' for p in pairs)}")
@@ -165,7 +183,7 @@ def main():
                 cur = next(r for r in rows if abs(r["thr"] - 0.82) < 1e-6)
                 res = {"model": name, "note": note, "size_mb": size, "text": tname,
                        "window": window, "guard": guard, "encode_s": round(secs, 1),
-                       "at_082": cur, "best": b}
+                       "at_082": cur, "best": b, "best_story": best_story(rows), "curve": rows}
                 results.append(res)
                 print(f"{name.split('/')[-1]:<44} {tname:<10} окно={window:<3} предохр={'да' if guard else 'нет'} | "
                       f"0.82: найдено {cur['tp']}/{n_same}, ложных {cur['fp']} | "
@@ -192,6 +210,22 @@ def main():
                 f.write(f"| {r['model'].split('/')[-1]} {r['note']} | {r['text']} | {r['window'] if r['window'] < 365 else '—'} | "
                         f"{'да' if r['guard'] else 'нет'} | {c['tp']} / {c['fp']} | {b['thr']:.2f} | {b['tp']} | {b['fp']} | "
                         f"{b['related']} | {b['unlabeled_above']} |\n")
+            f.write(f"\n## Один сюжет (столбец «Связанные строки»)\n\nНаходка — пара «одно событие» ({n_same}) или "
+                    f"«один сюжет» ({n_rel}); ошибка — «разные» ({n_diff}). Только окно 4 дня с предохранителем.\n\n")
+            f.write("| Модель | Текст | Порог | Одно событие | Один сюжет | Всего найдено | Ошибок | Неразмеч. выше порога |\n")
+            f.write("|---|---|---|---|---|---|---|---|\n")
+            for r in results:
+                if not (r["window"] == 4 and r["guard"]):
+                    continue
+                st = r["best_story"]
+                f.write(f"| {r['model'].split('/')[-1]} {r['note']} | {r['text']} | {st['thr']:.2f} | {st['tp']} | "
+                        f"{st['related']} | {st['tp'] + st['related']} из {n_same + n_rel} | {st['fp']} из {n_diff} | "
+                        f"{st['unlabeled_above']} |\n")
+                for thr in (0.88, 0.90, 0.92, 0.94):
+                    c = next((x for x in r["curve"] if abs(x["thr"] - thr) < 1e-6), None)
+                    if c and "story_model" in r["model"]:
+                        f.write(f"|  ↳ при {thr:.2f} | | | {c['tp']} | {c['related']} | {c['tp'] + c['related']} | "
+                                f"{c['fp']} | {c['unlabeled_above']} |\n")
 
 
 if __name__ == "__main__":

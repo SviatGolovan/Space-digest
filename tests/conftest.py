@@ -1,5 +1,8 @@
+import os
 import sys
 from pathlib import Path
+
+os.environ["SPACEDIGEST_NO_MODEL_DOWNLOAD"] = "1"      # тесты не качают модели из сети
 
 import pytest
 

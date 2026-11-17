@@ -67,7 +67,7 @@ def test_first_export_then_only_new(db, repo, svc):
     e1 = svc.prepare()
     rows = read_csv(e1["csv_file"])
     assert rows[0] == ["ID", "Дата публикации", "Источник", "Тип источника", "Заголовок",
-                       "Полный текст", "Ссылка", "Другие источники"]
+                       "Полный текст", "Ссылка", "Другие источники", "Связанные строки"]
     assert {r[4] for r in rows[1:]} == {"Launch of Soyuz", "Пуск Союза"}
     assert {r[3] for r in rows[1:]} == {"Сайт", "Telegram"}
     assert rows[1][0] == "1" and rows[1][6].startswith("https://ex.test/")

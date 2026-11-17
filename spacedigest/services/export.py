@@ -17,6 +17,7 @@ import os
 
 import csv
 import io
+import json
 import shutil
 from collections import defaultdict
 from datetime import datetime, timedelta
@@ -29,15 +30,16 @@ from ..domain.text import fix_mojibake
 from ..paths import resource_dir
 from .filters import ContentFilter
 from .stories import merge_text
+from .story import StoryLinker, related_json
 from .vectors import VectorCache
 
 LogFn = Optional[Callable[[str], None]]
 PERIOD_VAR = "{{ПЕРИОД}}"
 CSV_COLUMNS = ["ID", "Дата публикации", "Источник", "Тип источника", "Заголовок",
-               "Полный текст", "Ссылка", "Другие источники"]
+               "Полный текст", "Ссылка", "Другие источники", "Связанные строки"]
 # СЛК: плюс проверка даты и отметка о повторе из прошлого дайджеста
 SLK_COLUMNS = ["ID", "Дата публикации", "Дата проверена", "Источник", "Тип источника", "Заголовок",
-               "Полный текст", "Ссылка", "Другие источники", "Было в прошлом дайджесте"]
+               "Полный текст", "Ссылка", "Другие источники", "Связанные строки", "Было в прошлом дайджесте"]
 DATE_LABEL = {None: "по ленте", "": "по ленте", "page": "по странице статьи",
               "card": "по карточке на сайте"}
 PROFILES = ("space", "slk")
@@ -92,9 +94,11 @@ class ExportService:
 
     def __init__(self, db: Database, settings, deduper: Optional[Callable] = None,
                  downloads_dir: Optional[Path] = None, export_root: Optional[Path] = None,
-                 vectors: Optional[VectorCache] = None, profile: str = "space"):
+                 vectors: Optional[VectorCache] = None, profile: str = "space",
+                 story_encoder: Optional[Callable] = None):
         assert profile in PROFILES, profile
         self.db = db
+        self.linker = StoryLinker(db, settings, encode=story_encoder)
         self.profile = profile
         self.section = "slk" if profile == "slk" else "export"
         self.vectors = vectors or VectorCache(db)
@@ -259,7 +263,9 @@ class ExportService:
                     reference_label="Прошлые выгрузки", threshold=thr,
                     ref_threshold=min(0.97, thr + KNOWN_MARGIN),
                     cross_compare=True, prefer_file_as_base=False,
-                    encoder=self.vectors.encoder(dd.get("engine", "auto")), log=log)
+                    encoder=self.vectors.encoder(dd.get("engine", "auto")), log=log,
+                    window_days=float(dd.get("window_days", 4) or 0) or None,
+                    number_guard=bool(dd.get("number_guard", True)))
         out: dict[int, tuple[str, Optional[int], Optional[float]]] = {}
         for a in res["removed"]:
             canon = (a.get("duplicate_of") or {}).get("_item_id")
@@ -272,7 +278,7 @@ class ExportService:
     def _export_rows(self, export_id: int) -> list[dict]:
         rows = self.db.query("""
             SELECT ei.item_id AS id, ei.state, ei.duplicate_of, ei.similarity, ei.row_no, ei.reason,
-                   ei.note, i.source_id, i.title, i.summary, i.body, i.url, i.published_at,
+                   ei.note, ei.related, i.source_id, i.title, i.summary, i.body, i.url, i.published_at,
                    i.fetched_at, i.date_status, s.name AS source_name, s.kind AS kind
             FROM export_items ei JOIN items i ON i.id = ei.item_id JOIN sources s ON s.id = i.source_id
             WHERE ei.export_id = ?
@@ -301,11 +307,18 @@ class ExportService:
         out = io.StringIO()
         w = csv.writer(out, quoting=csv.QUOTE_ALL, lineterminator="\r\n")
         w.writerow(SLK_COLUMNS if self.slk else CSV_COLUMNS)
+        numbers = {r["id"]: k for k, r in enumerate((r for r in rows if r["state"] == "main"), start=1)}
         n = 0
         for r in rows:
             if r["state"] != "main":
                 continue
             n += 1
+            try:
+                rel_ids = json.loads(r.get("related") or "[]")
+            except ValueError:
+                rel_ids = []
+            related = ", ".join(str(numbers[i]) for i in sorted(rel_ids, key=lambda i: numbers.get(i, 0))
+                                if i in numbers)
             others = children.get(r["id"], [])
             text, _ = self.story(r, others)
             d = local_dt(r["published_at"])
@@ -316,10 +329,10 @@ class ExportService:
             if self.slk:
                 w.writerow([n, date, date_check_label(r), r["source_name"],
                             KIND_LABEL.get(r["kind"], r["kind"]), fix_mojibake(r["title"]), text, r["url"],
-                            other, r.get("note") or ""])
+                            other, related, r.get("note") or ""])
             else:
                 w.writerow([n, date, r["source_name"], KIND_LABEL.get(r["kind"], r["kind"]),
-                            fix_mojibake(r["title"]), text, r["url"], other])
+                            fix_mojibake(r["title"]), text, r["url"], other, related])
         return "\ufeff" + out.getvalue()                  # BOM — корректно открывается в Excel
 
     def write_csv(self, export_id: int) -> dict:
@@ -386,6 +399,7 @@ class ExportService:
         undated = sum(1 for r in kept if r.get("date_status") == "none")
         if log and undated:
             log(f"Без даты на сайте: {undated} — в CSV с пометкой «НЕ ПОДТВЕРЖДЕНА», ChatGPT проверит поиском")
+        related = self.linker.link(kept, log)
         dates = [d for d in (local_dt(r["published_at"]) for r in kept) if d]
         p_from, p_to = min(dates).date().isoformat(), max(dates).date().isoformat()
         win = info.get("window")
@@ -422,8 +436,9 @@ class ExportService:
                 if reason:
                     state = "filtered"
                 self.db.execute("INSERT INTO export_items (export_id, item_id, state, duplicate_of, similarity, "
-                                "reason, note) VALUES (?,?,?,?,?,?,?)",
-                                (eid, r["id"], state, dup_of, sim, reason, notes.get(r["id"])))
+                                "reason, note, related) VALUES (?,?,?,?,?,?,?,?)",
+                                (eid, r["id"], state, dup_of, sim, reason, notes.get(r["id"]),
+                                 related_json(related.get(r["id"], []))))
         counts = self.write_csv(eid)
         if log:
             log(f"Готово: {csv_path.name} ({counts['main']} строк), период {p_from} – {p_to}")
@@ -453,6 +468,7 @@ class ExportService:
                 "url": r["url"], "published": d.strftime("%d.%m %H:%M") if d else "",
                 "similarity": r.get("similarity"), "chars": len(full_text(r)),
                 "note": r.get("note") or "",
+                "related": len(json.loads(r.get("related") or "[]")),
                 "undated": r.get("date_status") == "none",
                 "date_check": DATE_LABEL.get(r.get("date_status")) if r.get("date_status") in ("page", "card") else ""}
 

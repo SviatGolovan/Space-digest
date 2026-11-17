@@ -16,6 +16,14 @@ datas = [
     (os.path.join(ROOT, "spacedigest", "core", "migrations"), "spacedigest/core/migrations"),
     (os.path.join(ROOT, "spacedigest", "prompts"), "spacedigest/prompts"),
 ]
+# Модель «один сюжет» (e5-small, ONNX int8, ~120 МБ) кладётся в установщик, чтобы не качать её
+# у пользователя. При сборке скачивается один раз и проверяется пробным расчётом.
+STORY_DIR = os.path.join(SPECPATH, "models", "multilingual-e5-small")
+if not os.path.isfile(os.path.join(STORY_DIR, "model.onnx")) and not os.environ.get("SPACEDIGEST_SKIP_STORY_MODEL"):
+    import subprocess
+    subprocess.run([sys.executable, "-m", "spacedigest.story_model", STORY_DIR], check=True, cwd=ROOT)
+if os.path.isfile(os.path.join(STORY_DIR, "model.onnx")):
+    datas.append((STORY_DIR, "spacedigest/models/multilingual-e5-small"))
 datas += collect_data_files("fastembed")
 datas += collect_data_files("telethon")
 for pkg in ("trafilatura", "justext", "courlan", "htmldate"):   # полный текст статей: настройки и стоп-слова
@@ -26,7 +34,7 @@ hiddenimports += collect_submodules("telethon")
 hiddenimports += collect_submodules("fastembed")
 hiddenimports += collect_submodules("deep_translator")
 hiddenimports += collect_submodules("spacedigest")          # ядро 4.0 подключается лениво
-hiddenimports += ["feedparser", "bs4", "htmldate"]          # страницы новостей без RSS и даты статей
+hiddenimports += ["feedparser", "bs4", "htmldate", "onnxruntime", "tokenizers", "huggingface_hub"]          # страницы новостей без RSS и даты статей
 hiddenimports += collect_submodules("trafilatura") + collect_submodules("justext")
 hiddenimports += ["sklearn.feature_extraction.text", "sklearn.utils._typedefs",
                   "sklearn.utils._heap", "sklearn.utils._sorting", "sklearn.utils._vector_sentinel",

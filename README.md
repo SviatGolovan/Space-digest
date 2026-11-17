@@ -41,15 +41,15 @@
    (кнопка «Add file → Upload files», вместе с папками `.github`, `packaging`, `spacedigest`).
 2. Вкладка **Actions** → **Build installers** → **Run workflow**.
 3. Через ~10–15 минут внизу страницы запуска, в **Artifacts**, появятся:
-   * `SpaceDigest-Windows` → `SpaceDigest-Setup-4.1.0.exe`
+   * `SpaceDigest-Windows` → `SpaceDigest-Setup-4.2.0.exe`
    * `SpaceDigest-macOS-AppleSilicon` → `.dmg` для Mac на M1–M4
    * `SpaceDigest-macOS-Intel` → `.dmg` для Mac на Intel
 
 Собрать на своём компьютере (нужен Python 3.12 с python.org, один раз):
 
 * **Windows:** установите [Inno Setup 6](https://jrsoftware.org/isdl.php), затем двойной щелчок по
-  `packaging\build_windows.bat` → `dist\SpaceDigest-Setup-4.1.0.exe`.
-* **macOS:** `bash packaging/build_macos.sh` → `dist/SpaceDigest-4.1.0-mac-arm64.dmg`.
+  `packaging\build_windows.bat` → `dist\SpaceDigest-Setup-4.2.0.exe`.
+* **macOS:** `bash packaging/build_macos.sh` → `dist/SpaceDigest-4.2.0-mac-arm64.dmg`.
 
 ## Установка у пользователя
 
@@ -234,6 +234,22 @@ Telegram берёт посты из общей базы.
 окно постоянно анимировало фон и кнопки, а шапка размывала анимированный фон под собой каждый кадр. Теперь
 размытие убрано, бесконечные перерисовки заменены разовыми, а когда окно программы не в фокусе (вы работаете
 в ChatGPT) или свёрнуто, все анимации стоят на паузе. Поиск DOCX в «Загрузках» стал дешевле.
+
+## Версия 4.2 — дедупликатор: предохранители и «один сюжет»
+
+Замер на реальных выгрузках ноября 2026 (`bench/`, задача Actions «Dedup benchmark») показал: текущая
+склейка (MiniLM, порог 0,82) точная, но пропускает большинство повторов, написанных разными словами; более
+крупные модели и векторные базы этого не исправляют — все модели путают «тот же факт» и «соседние части
+одного события» (анонс пуска и сама авария). Поэтому:
+
+* **Склейка остаётся точной** и получила предохранители (Настройки → Дедупликатор): склеиваются только
+  новости в окне 4 дней; разные номера в заголовках («миссия 98» / «99», «Ship 41» / «42») — не склеиваются.
+* **Новый уровень «один сюжет»** — столбец «Связанные строки» в CSV обеих выгрузок: номера строк того же
+  сюжета. Отдельная модель multilingual-e5-small (ONNX int8, ~120 МБ, `spacedigest/story_model.py`) встроена
+  в установщик; строки не склеиваются — ChatGPT по промпту решает, дубликат это или разные части события.
+* В установщике — самопроверка моделей (`SpaceDigest --selftest`), она выполняется при каждой сборке в CI.
+* Замер: `bench/data/*.csv` — выгрузки, `bench/labels_*.json` — разметка пар (same / related / diff),
+  результаты — `bench/results/result.md`.
 
 ## Для разработчика
 

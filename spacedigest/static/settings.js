@@ -156,6 +156,10 @@ function fill(){
   // Дедупликатор
   $('dd_engine').value = S.dedup.engine==='tfidf' ? 'tfidf' : 'auto';
   $('dd_engine').onchange = ()=>save({dedup:{engine:$('dd_engine').value}});
+  bindNum('dd_window','dedup','window_days');
+  bindToggle('dd_guard','dedup','number_guard');
+  bindToggle('dd_related','dedup','related');
+  bindNum('dd_rel_thr','dedup','related_threshold');
   $('dd_threshold').value = S.dedup.threshold;
   $('dd_thr_val').textContent = (+S.dedup.threshold).toFixed(2);
   $('dd_threshold').oninput = ()=>{ $('dd_thr_val').textContent = (+$('dd_threshold').value).toFixed(2); };
@@ -356,6 +360,8 @@ let modelTimer = null;
 async function loadEngine(){
   const e = await (await fetch('/api/dedup/engine')).json();
   const pill = $('model-pill'), btn = $('model-btn'), note = $('model-note');
+  const sn = $('story-note');
+  if(sn) sn.textContent = e.story_ready ? 'Модель встроена.' : 'Модель скачается при первой выгрузке (~120 МБ).';
   if(!e.available){ pill.className='pill warn'; pill.textContent='нет в этой сборке'; btn.style.display='none';
     note.textContent='Используется TF-IDF.'; return; }
   if(e.ready){ pill.className='pill ok'; pill.textContent='✓ скачана'; btn.style.display='none';

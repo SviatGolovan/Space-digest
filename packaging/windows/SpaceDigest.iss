@@ -1,9 +1,9 @@
 ﻿; Установщик Space Digest для Windows (Inno Setup 6).
-; Сборка: iscc /DAppVersion=4.1.0 packaging\windows\SpaceDigest.iss
+; Сборка: iscc /DAppVersion=4.2.0 packaging\windows\SpaceDigest.iss
 ; Перед этим — PyInstaller (папка dist\SpaceDigest).
 
 #ifndef AppVersion
-  #define AppVersion "4.1.0"
+  #define AppVersion "4.2.0"
 #endif
 #define AppName "Space Digest"
 #define AppExe  "SpaceDigest.exe"

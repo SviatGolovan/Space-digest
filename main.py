@@ -267,6 +267,36 @@ def _wait_pid(pid: int, timeout: float = 30.0) -> None:
         time.sleep(0.3)
 
 
+def selftest() -> int:
+    """Проверка установщика в CI: встроенная модель сюжетов и движок склейки работают."""
+    os.environ["SPACEDIGEST_NO_MODEL_DOWNLOAD"] = "1"        # проверяем именно встроенную модель
+    lines, ok = [], True
+    try:
+        from spacedigest import story_model
+        v = story_model.encode(["SpaceX catches Starship with the tower",
+                                "SpaceX поймала корабль Starship башней", "Курс рубля вырос"])
+        same, other = float(v[0] @ v[1]), float(v[0] @ v[2])
+        lines.append(f"story model: same={same:.3f} other={other:.3f} dir={story_model.model_dir()}")
+        ok &= same > other + 0.03
+    except Exception as e:                                       # noqa: BLE001
+        lines.append(f"story model: FAIL {e!r}")
+        ok = False
+    try:
+        from spacedigest import deduplicator
+        lines.append(f"fastembed available: {deduplicator.neural_available()}")
+        ok &= deduplicator.neural_available()
+    except Exception as e:                                       # noqa: BLE001
+        lines.append(f"fastembed: FAIL {e!r}")
+        ok = False
+    text = "\n".join(lines + ["SELFTEST " + ("OK" if ok else "FAILED")])
+    print(text)
+    try:
+        (Path(os.environ.get("SPACEDIGEST_DATA") or ".") / "selftest.txt").write_text(text, encoding="utf-8")
+    except OSError:
+        pass
+    return 0 if ok else 1
+
+
 def main() -> None:
     # Окно и фоновые задачи живут в одном процессе. Короткий интервал переключения потоков
     # не даёт сбору и разбору новостей надолго занимать интерпретатор, пока окно
@@ -281,9 +311,13 @@ def main() -> None:
     ap.add_argument("--port", type=int, default=0)
     ap.add_argument("--data", default="")
     ap.add_argument("--minimized", action="store_true", help="запуск вместе с компьютером: окно свёрнуто")
+    ap.add_argument("--selftest", action="store_true",
+                    help="проверка сборки: модели дедупликации считаются (код выхода 0 — всё в порядке)")
     args, _ = ap.parse_known_args()                  # macOS может передать -psn_…
     if args.data:
         os.environ["SPACEDIGEST_DATA"] = args.data
+    if args.selftest:
+        sys.exit(selftest())
 
     from spacedigest import paths
     data_dir = paths.data_dir()

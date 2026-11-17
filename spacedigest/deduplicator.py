@@ -238,17 +238,61 @@ def _canonical_rank(article: dict, prefer_file_as_base: bool) -> tuple:
 
 # ─── Ядро: жадная near-duplicate кластеризация по косинусной близости ─────────
 
+# ─── Предохранители склейки ──────────────────────────────────────────────────
+# Нейросеть хорошо видит общую тему, но не отличает один факт от соседнего:
+# «Electron, миссия 98» и «миссия 99», «Vulcan готовится к пуску» и «Vulcan потерпел
+# аварию» у неё почти одинаковы. Замер на выгрузках ноября 2026 (bench/) показал:
+# окно по датам и сверка номеров в заголовках убирают ложные склейки, не теряя повторов.
+_YEAR = re.compile(r"^(19|20)\d\d$")
+
+
+_NUM = re.compile(r"(?<![\w.,])(\d+(?:[.,]\d+)?)(?:st|nd|rd|th|-?(?:й|я|е|го|му|м))?(?![\w])", re.I)
+
+
+def title_numbers(title: str) -> set[str]:
+    """Числа заголовка без годов: номера миссий и полётов (98th, 15-й), количества."""
+    return {n.replace(",", ".") for n in _NUM.findall(title or "") if not _YEAR.match(n)}
+
+
+def _when(a: dict):
+    from datetime import datetime
+    v = (a.get("published_at") or "").strip().replace("T", " ")
+    for size, fmt in ((16, "%Y-%m-%d %H:%M"), (10, "%Y-%m-%d")):
+        try:
+            return datetime.strptime(v[:size], fmt)
+        except ValueError:
+            continue
+    return None
+
+
+def may_merge(a: dict, b: dict, window_days: Optional[float] = None, number_guard: bool = False) -> bool:
+    """Можно ли считать две новости одним событием, кроме близости текста.
+    Нет даты у одной из новостей — окно не проверяется (файлы CSV без дат)."""
+    if window_days:
+        wa, wb = _when(a), _when(b)
+        if wa and wb and abs((wa - wb).total_seconds()) > window_days * 86400:
+            return False
+    if number_guard:
+        na, nb = title_numbers(a.get("title", "")), title_numbers(b.get("title", ""))
+        if na and nb and not (na & nb):
+            return False
+    return True
+
+
 def _dedup_pool(
     articles: list[dict],
     embeddings: np.ndarray,
     threshold: float,
     prefer_file_as_base: bool,
+    window_days: Optional[float] = None,
+    number_guard: bool = False,
 ) -> tuple[list[dict], list[dict]]:
     """
     Дедупликация одного «пула» статей.
     Возвращает (kept, removed), где каждый removed содержит:
         duplicate_of  — каноническая статья, к которой он отнесён,
         similarity    — косинусная близость к ней.
+    window_days / number_guard — предохранители (см. may_merge).
     """
     n = len(articles)
     if n == 0:
@@ -268,9 +312,14 @@ def _dedup_pool(
             continue
         # косинус к уже оставленным (эмбеддинги нормированы → dot == cos)
         sims = _sims(embeddings[kept_pos], _row(embeddings, i))
-        best_local = int(np.argmax(sims))
-        best_score = float(sims[best_local])
-        if best_score >= threshold:
+        best_local, best_score = -1, -1.0
+        for cand in np.argsort(-sims):
+            if float(sims[cand]) < threshold:
+                break
+            if may_merge(articles[i], articles[kept_pos[int(cand)]], window_days, number_guard):
+                best_local, best_score = int(cand), float(sims[cand])
+                break
+        if best_local >= 0:
             canon = articles[kept_pos[best_local]]
             dup = dict(articles[i])
             dup["duplicate_of"] = {
@@ -389,6 +438,8 @@ def run_deduplication(
     log: LogFn = None,
     encoder: Optional[Callable] = None,
     ref_threshold: Optional[float] = None,
+    window_days: Optional[float] = None,
+    number_guard: bool = False,
 ) -> dict:
     """
     Запускает дедупликацию.
@@ -408,6 +459,9 @@ def run_deduplication(
     encoder              — свой способ получить векторы: encoder(статьи, тексты, log) →
                            (векторы, имя_бэкенда); например, с кэшем в базе. По умолчанию encode().
     ref_threshold        — отдельный порог для сверки с эталоном (по умолчанию = threshold).
+    window_days          — склеивать только новости, между которыми не больше N дней
+                           (к эталону не применяется: там важен именно давний повтор).
+    number_guard         — разные числа в заголовках (миссия 98 / 99) — не склеивать.
 
     Приоритет «оригинала» при перекрёстной сверке: файл-архив > сайты > Telegram.
 
@@ -484,7 +538,8 @@ def run_deduplication(
 
     if cross_compare or len(sets) == 1:
         # Все статьи в общий пул.
-        kept, removed = _dedup_pool(all_articles, embeddings, threshold, prefer_file_as_base)
+        kept, removed = _dedup_pool(all_articles, embeddings, threshold, prefer_file_as_base,
+                                    window_days, number_guard)
     else:
         # Каждый набор чистится независимо; эмбеддинги берём по _idx.
         for block, label in zip(sets, labels):
@@ -493,7 +548,8 @@ def run_deduplication(
             # переиндексация для _dedup_pool: используем локальные позиции
             sub_articles = block
             # подменим _idx на локальный для корректного тай-брейка внутри набора
-            k, r = _dedup_pool(sub_articles, sub_emb, threshold, prefer_file_as_base)
+            k, r = _dedup_pool(sub_articles, sub_emb, threshold, prefer_file_as_base,
+                               window_days, number_guard)
             kept.extend(k)
             removed.extend(r)
             _log(log, f"  «{label}»: оставлено {len(k)}, убрано {len(r)}.")
@@ -506,8 +562,14 @@ def run_deduplication(
         survivors, ref_removed = [], []
         for a in kept:
             sims = _sims(ref_emb, _row(embeddings, a["_idx"]))
-            best = int(np.argmax(sims)) if len(sims) else -1
-            if best >= 0 and float(sims[best]) >= ref_thr:
+            best = -1
+            for cand in (np.argsort(-sims) if len(sims) else []):
+                if float(sims[cand]) < ref_thr:
+                    break
+                if may_merge(a, ref_list[int(cand)], None, number_guard):
+                    best = int(cand)
+                    break
+            if best >= 0:
                 ref = ref_list[best]
                 dup = dict(a)
                 dup["duplicate_of"] = {

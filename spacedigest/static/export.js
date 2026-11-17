@@ -250,6 +250,7 @@ function badges(s){
   if(s.undated) b += '<span class="rv-badge warn" title="У новости на сайте нет даты — ChatGPT проверит её поиском">дата не подтверждена</span>';
   else if(s.date_check) b += `<span class="rv-badge" title="Как определена дата">дата ${esc(s.date_check)}</span>`;
   if(s.note) b += `<span class="rv-badge info" title="${esc(s.note)}">было в дайджесте</span>`;
+  if(s.related) b += `<span class="rv-badge" title="Один сюжет, разные части события: номера соседей — в столбце «Связанные строки» CSV">сюжет +${s.related}</span>`;
   return b;
 }
 function paintReview(){

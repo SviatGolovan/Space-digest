@@ -241,7 +241,7 @@ class Core:
 
     def _job_maintenance(self, ctx) -> dict:
         removed = self.queue.cleanup(keep_days=30)
-        vectors = self.exports.vectors.prune(keep_days=60)
+        vectors = self.exports.vectors.prune(keep_days=60) + self.exports.linker.prune(keep_days=60)
         self.db.execute("PRAGMA optimize")
         ctx.log(f"Удалено старых задач: {removed}, векторов старых новостей: {vectors}")
         return {"jobs_removed": removed, "vectors_removed": vectors}

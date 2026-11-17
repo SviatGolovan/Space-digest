@@ -93,6 +93,10 @@ DEFAULTS: dict = {
         "cross_compare": True,
         "prefer_file_as_base": True,
         "engine": "auto",             # auto | neural | tfidf
+        "window_days": 4,             # склеивать только новости, между которыми ≤ N дней (0 — без окна)
+        "number_guard": True,         # разные числа в заголовках (миссия 98 / 99) — не склеивать
+        "related": True,              # столбец «Связанные строки»: один сюжет, разные части события
+        "related_threshold": 0.92,    # порог близости для «один сюжет» (модель e5-small, заголовки)
     },
     "security": {
         "password_hash": "",          # pbkdf2; пусто = настройки без пароля
@@ -212,6 +216,8 @@ class Settings:
     def _validate(self) -> None:
         d = self._data
         d["dedup"]["threshold"] = min(0.99, max(0.5, float(d["dedup"]["threshold"])))
+        d["dedup"]["window_days"] = min(30, max(0, int(d["dedup"].get("window_days") or 0)))
+        d["dedup"]["related_threshold"] = min(0.99, max(0.6, float(d["dedup"].get("related_threshold") or 0.92)))
         d["telegram"]["lookback_days"] = min(90, max(1, int(d["telegram"]["lookback_days"])))
         d["telegram"]["poll_minutes"] = min(24 * 60, max(5, int(d["telegram"]["poll_minutes"])))
         d["fetch"]["timeout"] = min(120, max(3, int(d["fetch"]["timeout"])))
