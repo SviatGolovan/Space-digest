@@ -1,0 +1,49 @@
+name: Dedup benchmark
+
+# Замер дедупликатора на ваших выгрузках: bench/data/*.csv + разметка bench/labels_*.json.
+# Запускается сам, когда меняются данные, разметка или скрипт, и вручную (Actions → Run workflow).
+# Итог — таблица на странице запуска и файлы bench/results/result.md и result.json в репозитории.
+on:
+  push:
+    paths: ["bench/data/**", "bench/labels_*.json", "bench/dedup_bench.py"]
+  workflow_dispatch:
+    inputs:
+      models:
+        description: "Номера моделей через запятую или all"
+        default: "all"
+
+permissions:
+  contents: write
+
+jobs:
+  bench:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install
+        run: |
+          pip install --upgrade pip
+          pip install torch --index-url https://download.pytorch.org/whl/cpu
+          pip install sentence-transformers numpy
+      - name: Cache models
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/huggingface
+          key: hf-models-v1
+      - name: Benchmark
+        run: python bench/dedup_bench.py bench --out bench/results --models "${{ inputs.models || 'all' }}"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: bench-result
+          path: bench/results
+      - name: Save results to repository
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898699+github-actions[bot]@users.noreply.github.com"
+          git add bench/results
+          git commit -m "Замер дедупликатора: результаты" || exit 0
+          git push
