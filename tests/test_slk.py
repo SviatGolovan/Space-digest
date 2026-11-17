@@ -153,7 +153,7 @@ def test_slk_window_scope_columns_and_undated_label(db, repo, settings, tmp_path
                       "Electron launches HawkEye 360 satellites"}
     undated = next(r for r in body if r[5] == "Новость без даты")
     assert undated[2].startswith("НЕ ПОДТВЕРЖДЕНА")
-        assert e["profile"] == "slk" and e["csv_file"].replace("\\", "/").split("/")[-1].startswith("slk_news_")
+assert e["profile"] == "slk" and e["csv_file"].replace("\\", "/").split("/")[-1].startswith("slk_news_")
     w = slk.window()
     assert (e["period_from"], e["period_to"]) == (w["date_from"], w["date_to"])
     assert "{{" not in e["prompt"] and w["new_from"] in e["prompt"]
