@@ -23,6 +23,7 @@ class Source:
     priority: int = 0
     config: dict = field(default_factory=dict)
     space_only: bool = False          # в выгрузку — только новости с космическими словами
+    scope: str = "all"                # all — в обе выгрузки, space — только общая, slk — только СЛК
 
     @classmethod
     def from_row(cls, r: dict) -> "Source":
@@ -31,6 +32,7 @@ class Source:
                    category=r.get("category") or "", region=r.get("region") or "",
                    builtin=bool(r.get("builtin")), enabled=bool(r.get("enabled")),
                    priority=int(r.get("priority") or 0), space_only=bool(r.get("space_only")),
+                   scope=r.get("scope") or "all",
                    config=json.loads(cfg) if isinstance(cfg, str) else dict(cfg))
 
 
@@ -53,6 +55,7 @@ class RawItem:
     author: str = ""
     published_at: Optional[datetime] = None
     extra: dict[str, Any] = field(default_factory=dict)
+    date_from: Optional[str] = None   # None — дата из ленты; 'card' — из карточки на странице
 
 
 @dataclass

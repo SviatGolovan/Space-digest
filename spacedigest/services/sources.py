@@ -55,14 +55,61 @@ class SourceRepo:
     # ─── изменение ───────────────────────────────────────────────────────────
     def _insert(self, *, key: str, kind: str, name: str, url: str = "", category: str = "",
                 region: str = "", builtin: bool = False, enabled: bool = True,
-                priority: int = 0, config: Optional[dict] = None) -> int:
+                priority: int = 0, config: Optional[dict] = None, scope: str = "all") -> int:
         assert kind in SOURCE_KINDS, kind
         cur = self.db.execute(
             "INSERT INTO sources (key, kind, name, url, category, region, builtin, enabled, "
-            "priority, config, created_at) VALUES (?,?,?,?,?,?,?,?,?,?,?)",
+            "priority, config, created_at, scope) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)",
             (key, kind, name, url, category, region, int(builtin), int(enabled), priority,
-             json.dumps(config or {}, ensure_ascii=False), now_iso()))
+             json.dumps(config or {}, ensure_ascii=False), now_iso(), scope))
         return int(cur.lastrowid)
+
+    # Ключи config, которыми владеет встроенный список СЛК (остальное — выбор пользователя)
+    SLK_KEYS = ("html", "item_selector", "slk_trusted", "general", "fulltext")
+
+    def sync_slk(self, slk: Iterable[dict], telegram: Iterable[dict] = ()) -> int:
+        """Источники СЛК: добавить недостающие (scope = slk), обновить описание встроенных.
+        Telegram-каналы компаний добавляются один раз: удалённый пользователем не вернётся."""
+        added = 0
+        with self.db.tx():
+            for s in slk:
+                row = self.db.one("SELECT id, url, config FROM sources WHERE key = ?", (s["id"],))
+                if row is None:
+                    if self.db.one("SELECT 1 FROM sources WHERE kind='rss' AND url = ?", (s["url"],)):
+                        continue                       # такой сайт уже добавлен пользователем
+                    self._insert(key=s["id"], kind="rss", name=s["name"], url=s["url"],
+                                 category=s.get("category", ""), region=s.get("region", ""),
+                                 builtin=True, enabled=bool(s.get("enabled", True)),
+                                 config=s.get("config") or {}, scope="slk")
+                    added += 1
+                    continue
+                cfg = json.loads(row["config"] or "{}")
+                override = cfg.get("url_override")          # адрес, исправленный в старом парсере
+                keep_html = cfg.get("html") if override else None
+                for k in self.SLK_KEYS:
+                    cfg.pop(k, None)
+                cfg.update(s.get("config") or {})
+                if override:
+                    cfg["html"] = bool(keep_html)
+                url = override or s["url"]
+                self.db.execute("UPDATE sources SET name=?, url=?, category=?, region=?, builtin=1, config=? "
+                                "WHERE id=?", (s["name"], url, s.get("category", ""),
+                                               s.get("region", ""), json.dumps(cfg, ensure_ascii=False),
+                                               row["id"]))
+                if row["url"] != url:
+                    self.reset_state(row["id"])
+        for t in telegram:
+            flag = f"slk_tg:{t['channel']}"
+            if self.db.get_meta(flag):
+                continue
+            src = self.ensure_telegram(t["channel"])
+            cfg = dict(src.config)
+            if t.get("trusted"):
+                cfg["slk_trusted"] = True
+            self.update(src.id, config=cfg, name=t.get("name") or src.name)
+            self.db.set_meta(flag, "1")
+            added += 1
+        return added
 
     def sync_builtin(self, builtin: Iterable[dict], overrides: Optional[dict] = None) -> int:
         """Добавить недостающие встроенные RSS-источники и обновить их описание.
@@ -84,6 +131,10 @@ class SourceRepo:
                                                    s.get("region", ""), row["id"]))
                     if row["url"] != s["url"]:
                         self.reset_state(row["id"])
+                        if s.get("space_only"):          # адрес сменился на ленту с примесью — сразу фильтр
+                            self.db.execute("UPDATE sources SET space_only=1 WHERE id=?", (row["id"],))
+                if row is None and s.get("space_only"):
+                    self.db.execute("UPDATE sources SET space_only=1 WHERE key=?", (s["id"],))
         return added
 
     def add_rss(self, name: str, url: str, category: str = "Свои", region: str = "",
@@ -125,7 +176,8 @@ class SourceRepo:
         return self.get(sid)                                      # type: ignore[return-value]
 
     def update(self, source_id: int, **fields) -> Source:
-        allowed = {"name", "url", "category", "region", "enabled", "priority", "config", "space_only"}
+        allowed = {"name", "url", "category", "region", "enabled", "priority", "config", "space_only",
+                   "scope"}
         src = self.get(source_id)
         if not src:
             raise ValueError("источник не найден")
@@ -139,6 +191,8 @@ class SourceRepo:
                 v = json.dumps(v, ensure_ascii=False)
             if k in ("enabled", "space_only"):
                 v = int(bool(v))
+            if k == "scope" and v not in ("all", "space", "slk"):
+                continue
             sets.append(f"{k} = ?"); params.append(v)
         if sets:
             with self.db.tx():

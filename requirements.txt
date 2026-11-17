@@ -10,4 +10,5 @@ scikit-learn>=1.3          # запасной движок дедупликац�
 fastembed>=0.5             # нейросетевой движок (ONNX, без torch)
 telethon>=1.36             # Telegram прямо внутри программы
 pywebview>=5.0             # родное окно (Windows: WebView2, macOS: WebKit)
-trafilatura>=2.0          # полный текст статей со страниц
+trafilatura>=2.0          # полный текст статей со страниц (+ htmldate: дата статьи)
+beautifulsoup4>=4.12      # страницы новостей сайтов без RSS (источники СЛК)

@@ -47,7 +47,7 @@ def test_short_items_get_full_text_and_feed_does_not_overwrite_it(db, repo, sett
     ft = FullText(db, settings, http_get=lambda u: calls.append(u) or Resp(ARTICLE), sleep=lambda s: None)
     rows = ft.pending()
     assert [r["id"] for r in rows] == [iid]                            # только короткие, сайты, свежие
-    assert ft.process(rows) == {"ok": 1, "same": 0, "failed": 0}
+    assert ft.process(rows) == {"ok": 1, "same": 0, "failed": 0, "dated": 0}
     body = db.scalar("SELECT body FROM items WHERE id = ?", (iid,))
     assert "ten more launches" in body and calls == ["https://site.test/a"]
     assert ft.pending() == [] and long_id
@@ -73,7 +73,7 @@ def test_failures_and_pages_without_more_text_are_not_retried(db, repo, settings
     def get(u):
         return pages[u]
     ft = FullText(db, settings, http_get=get, sleep=lambda s: None)
-    assert ft.process(ft.pending()) == {"ok": 0, "same": 1, "failed": 2}
+    assert ft.process(ft.pending()) == {"ok": 0, "same": 1, "failed": 2, "dated": 0}
     st = {r["id"]: r["fulltext_status"] for r in db.query("SELECT id, fulltext_status FROM items")}
     assert st == {a: "failed", b: "same", c: "failed"} and ft.pending() == []
     s = ft.stats()

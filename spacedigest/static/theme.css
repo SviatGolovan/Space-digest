@@ -27,7 +27,7 @@
   /* поверхности (светлая тема) */
   --scheme:light; --card:#ffffff; --card-2:#f8faff; --hover:#f5f8ff; --track:#eef2fa; --track-2:#d6deec;
   --chip:#eef4ff; --chip-2:#f3f6fc; --line:#edf1f8; --knob:#ffffff; --hl:#ffffff;
-  --header-bg:rgba(255,255,255,.72); --glass-2:rgba(255,255,255,.96); --pill-hover:rgba(255,255,255,.6);
+  --header-bg:rgba(255,255,255,.94); --glass-2:rgba(255,255,255,.96); --pill-hover:rgba(255,255,255,.6);
   --logo-bg:linear-gradient(180deg,#fff,#eef3fe); --step-bg:linear-gradient(180deg,#eef4ff,#dbe7ff);
   --ink:#0b1f4d; --ink-2:#2563eb; --ink-3:#1d4ed8;
   --dot:rgba(37,99,235,.20); --grid-cell:#3b82f6;
@@ -51,7 +51,7 @@ html[data-theme="dark"]{
   --shadow-lg:0 1px 0 rgba(255,255,255,.04) inset,0 26px 60px -28px rgba(0,0,0,.95);
   --scheme:dark; --card:#0c1322; --card-2:#0a1120; --hover:#111c32; --track:#0a111f; --track-2:#22304d;
   --chip:rgba(96,165,250,.14); --chip-2:#111a2e; --line:#141e34; --knob:#e6ecf8; --hl:rgba(255,255,255,.04);
-  --header-bg:rgba(9,14,27,.72); --glass-2:rgba(12,19,34,.96); --pill-hover:rgba(255,255,255,.04);
+  --header-bg:rgba(9,14,27,.95); --glass-2:rgba(12,19,34,.96); --pill-hover:rgba(255,255,255,.04);
   --logo-bg:linear-gradient(180deg,#14203a,#0c1322); --step-bg:linear-gradient(180deg,rgba(96,165,250,.22),rgba(96,165,250,.08));
   --ink:#ffffff; --ink-2:#93c5fd; --ink-3:#bfdbfe;
   --dot:rgba(96,165,250,.16); --grid-cell:#60a5fa;
@@ -114,7 +114,7 @@ body::after{
 header.topbar{
   position:sticky;top:12px;z-index:60;
   padding:9px 12px 9px 14px;border:1px solid var(--border2);border-radius:var(--r-xl);
-  background:var(--header-bg);backdrop-filter:blur(16px) saturate(160%);-webkit-backdrop-filter:blur(16px) saturate(160%);
+  background:var(--header-bg);
   box-shadow:0 1px 0 var(--hl) inset,0 16px 40px -26px rgba(15,40,90,.35);
   margin-bottom:6px;
 }
@@ -126,7 +126,7 @@ header .logo{width:38px;height:38px;border-radius:12px;background:var(--logo-bg)
 header h1{font-size:15.5px;font-weight:700;letter-spacing:-.025em;
   background:linear-gradient(100deg,var(--ink) 0%,var(--ink-3) 30%,#0ea5e9 50%,var(--ink-3) 70%,var(--ink) 100%) 0 0/250% 100%;
   -webkit-background-clip:text;background-clip:text;color:transparent}
-html.fx header h1{animation:fx-aurora-text 8s ease-in-out infinite alternate}
+html.fx header h1{animation:fx-aurora-text 2.4s ease-in-out 1 both}
 @keyframes fx-aurora-text{to{background-position:100% 0}}
 .brand small{font-size:11px;color:var(--muted);margin-top:2px}
 .ic{width:16px;height:16px;flex-shrink:0}
@@ -242,7 +242,8 @@ html:not(.fx) .tab-link.active,.tabbar:not(.has-pill) .tab-link.active{backgroun
   content:'';position:absolute;z-index:-1;inset:1.5px;border-radius:12.5px;
   background:linear-gradient(110deg,transparent 35%,rgba(255,255,255,.28) 50%,transparent 65%) 0 0/250% 100%,
              linear-gradient(180deg,#2f6bf0,#1e40af);
-  animation:fx-shimmer 3s linear infinite}
+  }
+.btn-fetch:hover::after,.btn-run:hover::after,.fx-cta:hover::after{animation:fx-shimmer 1.6s linear 1}
 .btn-fetch:hover,.btn-run:hover,.fx-cta:hover{filter:brightness(1.07);transform:translateY(-1px)}
 .btn-fetch:active,.btn-run:active{transform:translateY(0) scale(.99)}
 .btn-fetch:disabled,.btn-run:disabled,.fx-cta:disabled{opacity:.5;box-shadow:none;filter:grayscale(.3)}
@@ -345,7 +346,7 @@ html:not(.fx) .set-nav a.active,.set-nav:not(.has-pill) a.active{background:var(
 /* Animated Shiny Text (Magic UI) */
 #steps-title{background:linear-gradient(110deg,#1d4ed8 35%,#7dd3fc 50%,#1d4ed8 65%) 0 0/250% 100%;
   -webkit-background-clip:text;background-clip:text;color:transparent;font-size:12px!important;font-weight:700!important}
-html.fx #steps-title{animation:fx-shiny-text 3s linear infinite}
+html.fx #steps-title{animation:fx-shiny-text 3s linear 2}
 @keyframes fx-shiny-text{from{background-position:120% 0}to{background-position:-120% 0}}
 .rv-more{border-radius:99px;font-family:var(--sans);background:var(--chip);border-color:var(--accent-line);color:var(--accent)}
 .rv-sugg{background:var(--sugg-bg)!important;border-color:var(--border)!important}
@@ -509,8 +510,8 @@ html[data-theme="dark"]{--c-rss:#2563eb;--c-tg:#0891b2}
 .toast.show{transform:none!important}
 .toast.success{border-left-color:var(--green)!important}.toast.error{border-left-color:var(--red)!important}.toast.warn{border-left-color:var(--amber)!important}
 .toast-ic{background:var(--chip-2)!important}
-#history-overlay,.modal-ov,.cmp-overlay{background:rgba(15,30,70,.28)!important;backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px)}
-#history-drawer{background:var(--glass-2)!important;backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);
+#history-overlay,.modal-ov,.cmp-overlay{background:rgba(15,30,70,.34)!important}
+#history-drawer{background:var(--glass-2)!important;
   border-left:1px solid var(--border)!important;box-shadow:-30px 0 70px -30px rgba(15,40,90,.45)!important;transition:transform .35s var(--ease)!important}
 .hd-head{color:var(--muted)!important;border-color:var(--border)!important}
 .hd-item{border-radius:12px!important;background:var(--card)!important;border-color:var(--border)!important;transition:.2s var(--ease)}
@@ -545,3 +546,15 @@ html:not(.fx) .btn-fetch::after,html:not(.fx) .btn-run::after,html:not(.fx) .fx-
   .btn-fetch::after,.btn-run::after,.fx-cta::after,header h1,#steps-title{animation:none!important}
   .fx-word,.fx-in{animation:none!important;opacity:1;filter:none;transform:none}
 }
+
+/* Окно не в фокусе (например, открыт ChatGPT) или свёрнуто: все анимации стоят на паузе,
+   чтобы не занимать видеокарту, общую для всех окон программы */
+html.fx-idle *,html.fx-idle *::before,html.fx-idle *::after{animation-play-state:paused!important}
+html.fx-idle #fx-bg{visibility:hidden}
+
+/* СЛК: пометки строк выгрузки */
+.rv-badge{display:inline-block;margin-left:8px;padding:1px 8px;border-radius:99px;font-size:10.5px;font-weight:600;
+  vertical-align:1px;white-space:nowrap;background:var(--chip);color:var(--muted);border:1px solid var(--border)}
+.rv-badge.warn{background:rgba(245,158,11,.12);color:var(--amber);border-color:rgba(245,158,11,.35)}
+.rv-badge.info{background:var(--accent-soft,rgba(37,99,235,.1));color:var(--accent);border-color:var(--accent-line)}
+.slk-note{padding:2px 4px 10px;line-height:1.5}

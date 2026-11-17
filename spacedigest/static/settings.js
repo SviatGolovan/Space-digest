@@ -2,7 +2,7 @@
    settings.js — окно «Настройки». Каждое изменение сохраняется сразу.
    ============================================================ */
 let S = null;          // настройки (для редактора)
-const SECTIONS = ['welcome','general','export','filter','sources','telegram','translation','dedup','data','security','about'];
+const SECTIONS = ['welcome','general','export','slk','filter','sources','telegram','translation','dedup','data','security','about'];
 const $ = id => document.getElementById(id);
 const esc = escHtml;
 const CATS = ['Свои','Ежедневные новости','Отраслевые издания','Военный космос','Научпоп','Аналитика',
@@ -123,6 +123,13 @@ function fill(){
   seg('ex_gpt_where', S.export.chatgpt_in_app ? 'app' : 'browser',
       v=>save({export:{chatgpt_in_app: v==='app'}}));
   loadPrompt();
+  // Дайджест СЛК
+  bindNum('slk_period','slk','period_days');
+  bindNum('slk_overlap','slk','overlap_days');
+  bindToggle('slk_dedup','slk','dedup');
+  bindText('slk_folder','slk','folder');
+  bindToggle('slk_prefilter','slk','prefilter');
+  loadSlk();
   bindTheme();
   bindToggle('gen_fx','general','animations', ()=>setTimeout(()=>location.reload(), 400));
   // Утренняя выгрузка
@@ -739,3 +746,92 @@ async function openExternal(url){
 }
 
 load();
+
+
+/* ── дайджест СЛК ──────────────────────────────────────── */
+async function loadSlk(){ loadSlkWords(); loadSlkPrompt(); loadSlkSources(); }
+async function loadSlkWords(){
+  const d = await (await fetch('/api/slk/config')).json();
+  for(const k of ['names','rocket','military']){
+    $('slk_'+k).value = d[k];
+    $('slk_'+k+'_state').textContent = d[k+'_default'] ? 'список по умолчанию' : 'ваш список';
+    $('slk_'+k+'_state').className = 'pill ' + (d[k+'_default'] ? '' : 'ok');
+  }
+}
+async function saveSlkWords(k){ if(await save({slk:{[k]: $('slk_'+k).value}}, 'Список сохранён')) loadSlkWords(); }
+async function resetSlkWords(k){
+  if(!confirm('Вернуть список по умолчанию? Ваши правки будут потеряны.')) return;
+  if(await save({slk:{[k]: ''}}, 'Возвращён список по умолчанию')) loadSlkWords();
+}
+async function loadSlkPrompt(){
+  const d = await (await fetch('/api/export/prompt?profile=slk',{headers:authHeaders()})).json();
+  $('slk_prompt').value = d.prompt || '';
+  $('slk_prompt_state').textContent = d.is_default ? 'встроенный промпт' : 'ваш промпт';
+  $('slk_prompt_state').className = 'pill ' + (d.is_default ? '' : 'ok');
+}
+async function saveSlkPrompt(){
+  const v = $('slk_prompt').value;
+  if(!v.includes('{{ПЕРИОД}}') && !confirm('В промпте нет {{ПЕРИОД}} — даты не будут подставляться автоматически. Сохранить?')) return;
+  if(await save({slk:{prompt: v}}, 'Промпт СЛК сохранён')) loadSlkPrompt();
+}
+async function resetSlkPrompt(){
+  if(!confirm('Вернуть встроенный промпт СЛК? Ваши правки будут потеряны.')) return;
+  if(await save({slk:{prompt: ''}}, 'Возвращён встроенный промпт')) loadSlkPrompt();
+}
+async function pickSlkFolder(){
+  const p = await askFolder('Полный путь к папке для выгрузок СЛК:');
+  if(!p) return;
+  $('slk_folder').value = p; await save({slk:{folder:p}}, 'Папка выгрузок СЛК: '+p);
+}
+async function loadSlkSources(){
+  let d; try{ d = await (await fetch('/api/slk/sources')).json(); }catch(e){ return; }
+  if(!d.ok){ $('slk_sources').innerHTML = `<tr><td class="set-note" style="padding:14px">${esc(d.error||'')}</td></tr>`; return; }
+  const list = d.sources;
+  const on = list.filter(s => s.enabled), bad = on.filter(s => s.problem || s.error);
+  $('slk_src_note').textContent = `включено ${on.length} из ${list.length}` + (bad.length ? ` · с ошибками ${bad.length}` : '');
+  const tag = s => s.kind === 'telegram' ? 'TG' : s.html ? 'страница' : 'RSS';
+  $('slk_sources').innerHTML = list.map(s => {
+    const state = s.error ? `<span class="rv-reason" title="${esc(s.error)}">${esc(s.error.slice(0, 120))}</span>`
+      : s.last_ok ? `<span class="set-note">собрано ${esc(s.last_ok)} · за 30 дн. ${s.n30}${
+          s.page_dated ? ` · дата со страницы статьи: ${s.page_dated}` : ''}${
+          s.undated ? ` · <span style="color:var(--amber)">без даты: ${s.undated}</span>` : ''}${
+          s.archive ? ` · архив сайта (не выгружается): ${s.archive}` : ''}</span>`
+      : '<span class="set-note">ещё не собирался</span>';
+    return `<tr><td style="width:46px"><label class="switch"><input type="checkbox" ${s.enabled ? 'checked' : ''}
+        onchange="slkToggle(${s.id}, this.checked)"><span class="slider"></span></label></td>
+      <td><b>${esc(s.name)}</b> <span class="ex-kind">${tag(s)}</span>${s.trusted ? ' <span class="rv-badge info" title="Сайт компании из перечня: без предфильтра">перечень ТЗ</span>' : ''}${
+        s.general ? ' <span class="rv-badge" title="Издание общего профиля: нужно и космическое, и ракетное слово">общий профиль</span>' : ''}
+        <div class="set-note mono" style="font-size:11px">${esc(s.url)}</div>${state}</td></tr>`;
+  }).join('') || '<tr><td class="set-note" style="padding:14px">Источников СЛК нет.</td></tr>';
+}
+async function slkToggle(id, on){
+  const d = await postJSON('/api/slk/source', {id, enabled: on});
+  if(!d.ok && !d._denied) toast(d.error || 'Не получилось', 'error');
+  loadSlkSources();
+}
+async function slkCollect(){
+  const btn = $('slk_collect_btn');
+  const r = await postJSON('/api/slk/collect', {});
+  if(!r.ok || !r.jobs){ toast(r.error || 'Нет включённых источников СЛК', 'warn'); return; }
+  btn.disabled = true; btn.textContent = 'Сбор…';
+  const t = setInterval(async () => {
+    const st = await (await fetch('/api/collect/now/status')).json();
+    btn.textContent = `Сбор… ${st.progress || 0}%`;
+    if(st.status !== 'running'){
+      clearInterval(t); btn.disabled = false; btn.textContent = 'Собрать источники СЛК';
+      toast('Сбор источников СЛК завершён', 'success'); loadSlkSources();
+    }
+  }, 1500);
+}
+async function slkImport(pick){
+  let path = '';
+  if(pick){ path = await askFolder('Папка старого «Парсера СЛК» (Windows: %APPDATA%\\SLK Parser):'); if(!path) return; }
+  const r = await postJSON('/api/slk/import', {path});
+  if(r._denied) return;
+  if(!r.ok){ $('slk_import_note').innerHTML = `<span style="color:var(--amber)">${esc(r.error || 'Не получилось')}</span>`; return; }
+  $('slk_import_note').innerHTML = `Из <span class="mono">${esc(r.folder)}</span>: добавлено источников ${r.added}` +
+    (r.exists ? `, уже были ${r.exists}` : '') + (r.urls_fixed ? `, исправлено адресов ${r.urls_fixed}` : '') +
+    (r.skipped.length ? `, пропущено ${r.skipped.length}` : '') +
+    (r.notes.length ? '<br>' + r.notes.map(esc).join('<br>') : '');
+  toast('Перенос из парсера СЛК выполнен', 'success'); loadSlkSources();
+}

@@ -47,6 +47,9 @@ class Core:
         self.fulltext = FullText(self.db, settings)
         self.collector = Collector(self.sources, self.queue, connectors, self.fulltext)
         self.exports = ExportService(self.db, settings)
+        # Дайджест по РН сверхлёгкого класса: та же база, свои окно дат, предфильтр и промпт
+        self.slk = ExportService(self.db, settings, vectors=self.exports.vectors, profile="slk")
+        self.fulltext.gate = self.slk.filter.passes
         from ..services.calibrate import Calibrator
         self.calibrator = Calibrator(self.db, settings, self.exports)
 
@@ -65,6 +68,13 @@ class Core:
         """Перенос 3.0 (один раз) и расписания. Без запуска фоновых потоков."""
         self.import_report = import_if_needed(self.db, self.sources, self.data_dir,
                                               self.settings, SOURCES)
+        from ..slk_sources import SLK_SOURCES, SLK_TELEGRAM
+        try:
+            n = self.sources.sync_slk(SLK_SOURCES, SLK_TELEGRAM)
+            if n:
+                log.info("Источники СЛК: добавлено %s", n)
+        except Exception as e:                                   # noqa: BLE001 — не мешаем запуску
+            log.warning("Источники СЛК не синхронизированы: %s", e)
         self.migrate_legacy_settings()
         self.apply_schedules()
 
@@ -95,8 +105,10 @@ class Core:
     def _job_export(self, ctx) -> dict:
         from .jobs import PermanentError
         p = ctx.payload
+        svc = self.slk if p.get("profile") == "slk" else self.exports
         try:
-            e = self.exports.prepare(mode=p.get("mode", "since_last"), date_from=p.get("date_from", ""),
+            e = svc.prepare(mode=p.get("mode") or ("window" if svc.slk else "since_last"),
+                            date_from=p.get("date_from", ""),
                                      date_to=p.get("date_to", ""), kinds=p.get("kinds") or ("rss", "telegram"),
                                      dedupe=p.get("dedupe"), log=ctx.log)
         except ValueError as ex:                      # «нет новостей» и т. п. — не повторять

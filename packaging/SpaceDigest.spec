@@ -26,7 +26,7 @@ hiddenimports += collect_submodules("telethon")
 hiddenimports += collect_submodules("fastembed")
 hiddenimports += collect_submodules("deep_translator")
 hiddenimports += collect_submodules("spacedigest")          # ядро 4.0 подключается лениво
-hiddenimports += ["feedparser"]
+hiddenimports += ["feedparser", "bs4", "htmldate"]          # страницы новостей без RSS и даты статей
 hiddenimports += collect_submodules("trafilatura") + collect_submodules("justext")
 hiddenimports += ["sklearn.feature_extraction.text", "sklearn.utils._typedefs",
                   "sklearn.utils._heap", "sklearn.utils._sorting", "sklearn.utils._vector_sentinel",

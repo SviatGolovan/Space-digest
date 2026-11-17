@@ -13,6 +13,7 @@
     <div class="nav-sep"></div>
     <a href="#general">{{ L.icon("general") }}Общие</a>
     <a href="#export">{{ L.icon("export") }}Выгрузка и ChatGPT</a>
+    <a href="#slk">{{ L.icon("rocket") }}Дайджест СЛК</a>
     <a href="#filter">{{ L.icon("filter") }}Фильтр мусора</a>
     <a href="#sources">{{ L.icon("rss") }}Источники сайтов</a>
     <a href="#telegram">{{ L.icon("tg") }}Telegram</a>
@@ -216,6 +217,103 @@
           <textarea class="set-in w-full" id="ex_prompt" rows="14" style="font-family:var(--mono);font-size:11.5px;line-height:1.5;resize:vertical"></textarea>
           <div class="step-row"><button class="btn primary" onclick="savePrompt()">Сохранить промпт</button>
             <button class="btn" onclick="resetPrompt()">Вернуть по умолчанию</button></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ═════════ ДАЙДЖЕСТ СЛК ═════════ -->
+    <section class="set-sec" id="sec-slk">
+      <div class="set-h"><h2>Дайджест СЛК</h2>
+        <p>Выгрузка по ракетам-носителям сверхлёгкого класса — вкладка «СЛК». База и сбор общие с основным
+          дайджестом: к вашим сайтам и каналам добавлены сайты компаний из перечня ТЗ и издания общего профиля.</p></div>
+      <div class="set-group">
+        <div class="set-group-t">Период</div>
+        <div class="set-row">
+          <div class="set-lbl">Новые дни
+            <small>Сколько последних дней выгрузка считает новыми. Обычно — две недели.</small></div>
+          <div class="set-ctl"><input type="number" class="set-in w-s" id="slk_period" min="1" max="90"></div>
+        </div>
+        <div class="set-row">
+          <div class="set-lbl">Перекрытие с прошлым поиском, дней
+            <small>Ещё столько дней до новых: подхватывает новости, которые сайты опубликовали с опозданием.
+              То, что уже было в прошлой выгрузке СЛК, придёт в CSV с отметкой — ChatGPT не повторит его без нового факта.</small></div>
+          <div class="set-ctl"><input type="number" class="set-in w-s" id="slk_overlap" min="0" max="30"></div>
+        </div>
+        <div class="set-row">
+          <div class="set-lbl">Сводить версии одного события
+            <small>Одно событие из нескольких источников — одна строка CSV с новыми фактами остальных.</small></div>
+          <div class="set-ctl"><label class="switch"><input type="checkbox" id="slk_dedup"><span class="slider"></span></label></div>
+        </div>
+        <div class="set-row">
+          <div class="set-lbl">Папка выгрузок СЛК
+            <small>Пусто — «Документы / Space Digest / Выгрузки СЛК».</small></div>
+          <div class="set-ctl"><input class="set-in w-m" id="slk_folder" placeholder="по умолчанию">
+            <button class="btn" onclick="pickSlkFolder()">Выбрать…</button></div>
+        </div>
+      </div>
+      <div class="set-group">
+        <div class="set-group-t">Источники СЛК</div>
+        <div class="set-row col">
+          <div class="set-lbl">Сайты компаний и издания
+            <small>У сайтов без RSS разбирается страница новостей. Если у новости на сайте нет даты, программа берёт её
+              со страницы статьи; не нашла — в CSV пометка «дата не подтверждена», и ChatGPT проверяет её поиском.
+              Всё, что сайт показал при самом первом сборе без дат, считается архивом и в выгрузку не идёт.</small></div>
+          <div class="step-row"><button class="btn primary" id="slk_collect_btn" onclick="slkCollect()">Собрать источники СЛК</button>
+            <span class="set-note" id="slk_src_note"></span></div>
+          <div class="table-scroll" style="max-height:420px;border:1px solid var(--border);border-radius:var(--r-md)">
+            <table class="news-table"><tbody id="slk_sources"><tr><td class="set-note" style="padding:14px">Загрузка…</td></tr></tbody></table>
+          </div>
+        </div>
+        <div class="set-row">
+          <div class="set-lbl">Перенести из старого «Парсера СЛК»
+            <small>Свои источники и исправленные адреса. Ключи Gemini и старые промпты не нужны — не переносятся.</small></div>
+          <div class="set-ctl"><button class="btn" onclick="slkImport(false)">Найти автоматически</button>
+            <button class="btn" onclick="slkImport(true)">Выбрать папку…</button></div>
+        </div>
+        <div class="set-row"><div class="set-note" id="slk_import_note"></div></div>
+      </div>
+      <div class="set-group">
+        <div class="set-group-t">Мягкий предфильтр</div>
+        <div class="set-row">
+          <div class="set-lbl">Убирать явно лишнее перед ChatGPT
+            <small>Сайты компаний из перечня проходят целиком. Остальное — если есть название РН или компании из перечня
+              либо «ракетное» слово (пуск, двигатель, космодром…); у изданий общего профиля — ещё и космическое слово.
+              Военная тематика без названий из перечня отсеивается. Всё отсеянное видно во вкладке «Отфильтровано».</small></div>
+          <div class="set-ctl"><label class="switch"><input type="checkbox" id="slk_prefilter"><span class="slider"></span></label></div>
+        </div>
+        <div class="set-row col">
+          <div class="set-lbl">Названия РН и компаний <span class="pill" id="slk_names_state">…</span>
+            <small>Новость с таким названием проходит всегда. Синтаксис как в фильтре мусора: <b>Kuaizhou*</b> — все формы,
+              <b>РН</b> — только целое слово.</small></div>
+          <textarea class="set-in w-full" id="slk_names" rows="7" style="font-family:var(--mono);font-size:11.5px;line-height:1.5;resize:vertical"></textarea>
+          <div class="step-row"><button class="btn primary" onclick="saveSlkWords('names')">Сохранить</button>
+            <button class="btn" onclick="resetSlkWords('names')">Вернуть по умолчанию</button></div>
+        </div>
+        <div class="set-row col">
+          <div class="set-lbl">Ракетные слова <span class="pill" id="slk_rocket_state">…</span>
+            <small>Без хотя бы одного из них новость космического издания или канала отсеивается.</small></div>
+          <textarea class="set-in w-full" id="slk_rocket" rows="6" style="font-family:var(--mono);font-size:11.5px;line-height:1.5;resize:vertical"></textarea>
+          <div class="step-row"><button class="btn primary" onclick="saveSlkWords('rocket')">Сохранить</button>
+            <button class="btn" onclick="resetSlkWords('rocket')">Вернуть по умолчанию</button></div>
+        </div>
+        <div class="set-row col">
+          <div class="set-lbl">Военная тематика <span class="pill" id="slk_military_state">…</span>
+            <small>Отсеивается, если в новости нет названий из перечня.</small></div>
+          <textarea class="set-in w-full" id="slk_military" rows="5" style="font-family:var(--mono);font-size:11.5px;line-height:1.5;resize:vertical"></textarea>
+          <div class="step-row"><button class="btn primary" onclick="saveSlkWords('military')">Сохранить</button>
+            <button class="btn" onclick="resetSlkWords('military')">Вернуть по умолчанию</button></div>
+        </div>
+      </div>
+      <div class="set-group">
+        <div class="set-group-t">Промпт СЛК</div>
+        <div class="set-row col">
+          <div class="set-lbl">Текст промпта <span class="pill" id="slk_prompt_state">…</span>
+            <small>Программа подставит <b>{{ПЕРИОД}}</b> — всё окно выгрузки, <b>{{НОВЫЙ_ПЕРИОД}}</b> — новые дни,
+              <b>{{ПЕРЕКРЫТИЕ}}</b> — дни перекрытия с прошлым поиском. Встроенный промпт проверяет даты поиском
+              и не повторяет новости из прошлого дайджеста.</small></div>
+          <textarea class="set-in w-full" id="slk_prompt" rows="14" style="font-family:var(--mono);font-size:11.5px;line-height:1.5;resize:vertical"></textarea>
+          <div class="step-row"><button class="btn primary" onclick="saveSlkPrompt()">Сохранить промпт</button>
+            <button class="btn" onclick="resetSlkPrompt()">Вернуть встроенный</button></div>
         </div>
       </div>
     </section>

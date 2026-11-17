@@ -268,6 +268,10 @@ def _wait_pid(pid: int, timeout: float = 30.0) -> None:
 
 
 def main() -> None:
+    # Окно и фоновые задачи живут в одном процессе. Короткий интервал переключения потоков
+    # не даёт сбору и разбору новостей надолго занимать интерпретатор, пока окно
+    # перетаскивают или прокручивают.
+    sys.setswitchinterval(0.001)
     wait = os.environ.pop("SPACEDIGEST_WAIT_PID", "")
     if wait.isdigit():
         _wait_pid(int(wait))

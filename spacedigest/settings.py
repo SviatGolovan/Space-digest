@@ -49,6 +49,18 @@ DEFAULTS: dict = {
         "chatgpt_url": "https://chatgpt.com/",
         "chatgpt_in_app": True,       # открывать ChatGPT в окне программы (иначе — в браузере)
     },
+    "slk": {                          # дайджест по РН сверхлёгкого класса
+        "period_days": 14,            # новые дни выгрузки
+        "overlap_days": 7,            # + дни перекрытия с прошлым поиском
+        "folder": "",                 # пусто = Документы/Space Digest/Выгрузки СЛК
+        "dedup": True,                # сводить версии одного события в одну строку
+        "reference_days": 30,         # с какими прошлыми выгрузками СЛК сверять повторы
+        "prompt": "",                 # пусто = встроенный промпт (prompts/slk_default.txt)
+        "prefilter": True,            # мягкий предфильтр перед ChatGPT
+        "names": "",                  # пусто = встроенные словари (services/slk.py)
+        "rocket": "",
+        "military": "",
+    },
     "morning": {                      # утренняя выгрузка: сбор + подготовка CSV к нужному часу
         "enabled": False,
         "time": "09:00",              # по Москве
@@ -205,6 +217,11 @@ class Settings:
         d["fetch"]["timeout"] = min(120, max(3, int(d["fetch"]["timeout"])))
         d["fetch"]["delay"] = min(10.0, max(0.0, float(d["fetch"]["delay"])))
         d["export"]["reference_days"] = min(30, max(0, int(d["export"]["reference_days"])))
+        d["slk"]["period_days"] = min(90, max(1, int(d["slk"].get("period_days") or 14)))
+        d["slk"]["overlap_days"] = min(30, max(0, int(d["slk"].get("overlap_days") or 0)))
+        d["slk"]["reference_days"] = min(120, max(0, int(d["slk"].get("reference_days") or 0)))
+        for k in ("names", "rocket", "military"):
+            d["slk"][k] = str(d["slk"].get(k) or "")[:20000]
         if not str(d["export"]["chatgpt_url"]).startswith(("http://", "https://")):
             d["export"]["chatgpt_url"] = "https://chatgpt.com/"
         d["collect"]["sites_minutes"] = min(24 * 60, max(15, int(d["collect"]["sites_minutes"])))

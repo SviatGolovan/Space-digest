@@ -1095,7 +1095,23 @@ def api_tg_job_articles(tg_id: str):
 
 @app.route("/export")
 def export_page():
-    return _page("export.html")
+    return _page("export.html", profile="space")
+
+
+@app.route("/slk")
+def slk_page():
+    """Дайджест по РН сверхлёгкого класса: та же страница выгрузки, профиль slk."""
+    return _page("export.html", profile="slk")
+
+
+def _svc(profile=None):
+    """Сервис выгрузки по профилю: space — общий дайджест, slk — РН сверхлёгкого класса."""
+    return core.slk if profile == "slk" else core.exports
+
+
+def _svc_for(eid: int):
+    e = core.exports.get(eid) if core else None
+    return _svc((e or {}).get("profile"))
 
 
 def _need_core():
@@ -1115,8 +1131,10 @@ def _export_view(e: dict) -> dict:
 @app.route("/api/export/prompt")
 def api_export_prompt():
     from .services.export import default_prompt
-    custom = (settings.get("export", "prompt") or "").strip()
-    return jsonify({"prompt": custom or default_prompt(), "is_default": not custom})
+    profile = "slk" if request.args.get("profile") == "slk" else "space"
+    custom = (settings.get("slk" if profile == "slk" else "export", "prompt") or "").strip()
+    return jsonify({"prompt": custom or default_prompt(profile), "is_default": not custom,
+                    "default": default_prompt(profile)})
 
 
 @app.route("/api/export/preview", methods=["POST"])
@@ -1124,9 +1142,10 @@ def api_export_preview():
     if (r := _need_core()):
         return r
     d = request.get_json(silent=True) or {}
+    svc = _svc(d.get("profile"))
     try:
-        p = core.exports.preview(d.get("mode", "since_last"), d.get("date_from", ""),
-                                 d.get("date_to", ""), tuple(d.get("kinds") or ("rss", "telegram")))
+        p = svc.preview(d.get("mode") or ("window" if svc.slk else "since_last"), d.get("date_from", ""),
+                        d.get("date_to", ""), tuple(d.get("kinds") or ("rss", "telegram")))
     except ValueError as e:
         return jsonify({"ok": False, "error": str(e)})
     if p.get("last_export"):
@@ -1139,9 +1158,10 @@ def api_export_prepare():
     if (r := _need_core()):
         return r
     d = request.get_json(silent=True) or {}
-    payload = {k: d.get(k) for k in ("mode", "date_from", "date_to", "kinds", "dedupe") if k in d}
-    job_id = core.queue.enqueue("export_prepare", payload, dedupe_key="export_prepare", priority=10,
-                                max_attempts=1)
+    payload = {k: d.get(k) for k in ("mode", "date_from", "date_to", "kinds", "dedupe", "profile") if k in d}
+    job_id = core.queue.enqueue("export_prepare", payload,
+                                dedupe_key="export_prepare:" + ("slk" if d.get("profile") == "slk" else "space"),
+                                priority=10, max_attempts=1)
     return jsonify({"ok": True, "job_id": job_id})
 
 
@@ -1159,7 +1179,7 @@ def api_job_get(job_id: int):
 def api_export_list():
     if (r := _need_core()):
         return r
-    return jsonify([_export_view(e) for e in core.exports.list(50)])
+    return jsonify([_export_view(e) for e in _svc(request.args.get("profile")).list(50)])
 
 
 @app.route("/api/export/<int:eid>")
@@ -1179,7 +1199,7 @@ def api_export_review(eid: int):
         return r
     if not core.exports.get(eid):
         return jsonify({"ok": False, "error": "выгрузка не найдена"}), 404
-    return jsonify({"ok": True, **core.exports.review(eid)})
+    return jsonify({"ok": True, **_svc_for(eid).review(eid)})
 
 
 @app.route("/api/export/<int:eid>/item", methods=["POST"])
@@ -1189,7 +1209,7 @@ def api_export_item(eid: int):
         return r
     d = request.get_json(silent=True) or {}
     try:
-        review = core.exports.change(eid, int(d.get("item_id") or 0), str(d.get("action") or ""))
+        review = _svc_for(eid).change(eid, int(d.get("item_id") or 0), str(d.get("action") or ""))
     except ValueError as e:
         return jsonify({"ok": False, "error": str(e)}), 400
     return jsonify({"ok": True, **review, "export": _export_view(core.exports.get(eid))})
@@ -1302,11 +1322,12 @@ def _refilter_reply(eid, extra: dict):
     """После нового правила — сразу почистить открытую выгрузку."""
     out = {"ok": True, **extra}
     if eid and core.exports.get(eid):
+        svc = _svc_for(eid)
         try:
-            out["refiltered"] = core.exports.refilter(eid)
+            out["refiltered"] = svc.refilter(eid)
         except ValueError as e:
             out["warning"] = str(e)
-        out["review"] = core.exports.review(eid)
+        out["review"] = svc.review(eid)
         out["export"] = _export_view(core.exports.get(eid))
     return jsonify(out)
 
@@ -1436,6 +1457,86 @@ def api_collect_now_status():
     s = core.jobs_summary(t["ids"])
     s["log"] = s["log"][-60:]
     return jsonify(s)
+
+
+# ─── СЛК: словари, источники, перенос старого парсера ────────────────────────
+
+@app.route("/api/slk/config")
+def api_slk_config():
+    from .services.slk import DEFAULT_MILITARY, DEFAULT_NAMES, DEFAULT_ROCKET
+    c = settings.get("slk") or {}
+    out = {}
+    for k, default in (("names", DEFAULT_NAMES), ("rocket", DEFAULT_ROCKET), ("military", DEFAULT_MILITARY)):
+        out[k] = (c.get(k) or "").strip() or default
+        out[k + "_default"] = not (c.get(k) or "").strip()
+    return jsonify(out)
+
+
+@app.route("/api/slk/sources")
+def api_slk_sources():
+    """Источники СЛК со «здоровьем»: работает ли, сколько новостей, сколько без даты."""
+    if (r := _need_core()):
+        return r
+    from .services.export import local_dt
+    since = (datetime.now(timezone.utc) - timedelta(days=30)).strftime("%Y-%m-%dT%H:%M:%SZ")
+    counts = {r["source_id"]: r for r in core.db.query("""
+        SELECT source_id, COUNT(*) AS n30,
+               SUM(date_status = 'none') AS undated, SUM(date_status = 'baseline') AS archive,
+               SUM(date_status = 'page') AS page_dated
+        FROM items WHERE fetched_at >= ? GROUP BY source_id""", (since,))}
+    out = []
+    for h in core.sources.health():
+        cfg = json.loads(h.get("config") or "{}")
+        if h.get("scope") != "slk" and not cfg.get("slk_trusted"):
+            continue
+        c = counts.get(h["id"], {})
+        last_ok = local_dt(h.get("last_ok_at"))
+        out.append({"id": h["id"], "name": h["name"], "url": h["url"], "kind": h["kind"],
+                    "category": h["category"], "enabled": bool(h["enabled"]),
+                    "html": bool(cfg.get("html")), "trusted": bool(cfg.get("slk_trusted")),
+                    "general": bool(cfg.get("general")),
+                    "error": h.get("last_error") or "", "problem": bool(h.get("problem")),
+                    "last_ok": last_ok.strftime("%d.%m %H:%M") if last_ok else "",
+                    "n30": int(c.get("n30") or 0), "undated": int(c.get("undated") or 0),
+                    "archive": int(c.get("archive") or 0), "page_dated": int(c.get("page_dated") or 0)})
+    return jsonify({"ok": True, "sources": out})
+
+
+@app.route("/api/slk/source", methods=["POST"])
+@require_admin
+def api_slk_source():
+    if (r := _need_core()):
+        return r
+    d = request.get_json(silent=True) or {}
+    try:
+        core.sources.update(int(d.get("id") or 0), enabled=bool(d.get("enabled")))
+    except ValueError as e:
+        return jsonify({"ok": False, "error": str(e)}), 400
+    return jsonify({"ok": True})
+
+
+@app.route("/api/slk/collect", methods=["POST"])
+def api_slk_collect():
+    """Собрать только источники СЛК (проверка после настройки или переноса)."""
+    if (r := _need_core()):
+        return r
+    ids = [core.collector.enqueue_source(s.id, priority=5) for s in core.sources.list(enabled=True)
+           if s.scope == "slk" and s.url and (s.kind != "telegram" or tg.configured())]
+    tasks["collect_now"] = {"id": uuid.uuid4().hex, "ids": ids}
+    return jsonify({"ok": True, "jobs": len(ids)})
+
+
+@app.route("/api/slk/import", methods=["POST"])
+@require_admin
+def api_slk_import():
+    if (r := _need_core()):
+        return r
+    from .services.slk_import import import_slk
+    folder = ((request.get_json(silent=True) or {}).get("path") or "").strip() or None
+    try:
+        return jsonify({"ok": True, **import_slk(core.sources, folder)})
+    except ValueError as e:
+        return jsonify({"ok": False, "error": str(e)})
 
 
 # ─── ДАННЫЕ: папка, резервная копия, импорт старой версии ────────────────────

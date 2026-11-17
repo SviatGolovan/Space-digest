@@ -2,4 +2,4 @@
 
 APP_NAME = "Space Digest"
 APP_ID = "SpaceDigest"          # имя папки с данными пользователя
-VERSION = "4.0.0"
+VERSION = "4.1.0"

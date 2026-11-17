@@ -1,0 +1,1125 @@
+{
+"about": "Разметка пар по ссылкам из bench/data/*.csv: same — одно событие, related — один сюжет, разные части события, diff — разные события.",
+"pairs": [
+{
+"a": "https://t.me/cosmoRaccoon/20317",
+"b": "https://t.me/roscosmos_press/3760",
+"label": "same",
+"a_title": "«Росатом» изучает пять вариантов компактной АЭС для Луны. В 2027 году госкорпорация планир",
+"b_title": "Росатом изучает пять вариантов лунных атомных станций, и в 2027 году предстоит сделать выб"
+},
+{
+"a": "https://t.me/cosmoRaccoon/20225",
+"b": "https://t.me/cosmoRaccoon/20222",
+"label": "diff",
+"a_title": "Вице-президент компании SpaceX по запускам Кико Донтчев изложил план 16-го испытательного ",
+"b_title": "SpaceX планирует до конца 2026 года провести первый запуск Starship с площадки LC-39A во Ф"
+},
+{
+"a": "https://science.nasa.gov/earth/earth-observatory/the-last-ice-on-puncak-jaya/",
+"b": "https://science.nasa.gov/earth/earth-observatory/a-global-rebound-for-mangroves/",
+"label": "diff",
+"a_title": "The Last Ice on Puncak Jaya",
+"b_title": "A Global Rebound for Mangroves"
+},
+{
+"a": "https://science.nasa.gov/earth/earth-observatory/tossing-fireworks-from-cloud-to-cloud/",
+"b": "https://science.nasa.gov/earth/earth-observatory/a-global-rebound-for-mangroves/",
+"label": "diff",
+"a_title": "Tossing Fireworks from Cloud to Cloud",
+"b_title": "A Global Rebound for Mangroves"
+},
+{
+"a": "https://science.nasa.gov/earth/earth-observatory/tossing-fireworks-from-cloud-to-cloud/",
+"b": "https://science.nasa.gov/earth/earth-observatory/the-last-ice-on-puncak-jaya/",
+"label": "diff",
+"a_title": "Tossing Fireworks from Cloud to Cloud",
+"b_title": "The Last Ice on Puncak Jaya"
+},
+{
+"a": "https://www.space.com/space-exploration/launches-spacecraft/ula-vulcan-centaur-return-to-flight-amazon-leo-internet-satellite-launch",
+"b": "https://satnews.com/2026/11/15/ula-vulcan-centaur-suffers-anomaly-during-return-to-flight-losing-40-amazon-leo-satellites/",
+"label": "same",
+"a_title": "ULA's Vulcan Centaur rocket fails during return-to-flight launch, 40 Amazon satellites los",
+"b_title": "ULA Vulcan Centaur Suffers Anomaly During Return to Flight, Losing 40 Amazon Leo Satellite"
+},
+{
+"a": "https://phys.org/news/2026-11-rare-star-emits-radio-minutes.html",
+"b": "https://phys.org/news/2026-11-dead-star-radio-minutes-partner.html",
+"label": "same",
+"a_title": "A rare star system emits radio signals every 8 minutes",
+"b_title": "A dead star is flashing radio waves every 8 minutes, and its partner looks a lot like the "
+},
+{
+"a": "https://science.nasa.gov/image-article/apod-2026-november-2-a-long-cloud-on-mars/",
+"b": "https://science.nasa.gov/image-article/apod-2026-november-1-colors-of-the-moon/",
+"label": "diff",
+"a_title": "APOD: 2026 November 2 – A Long Cloud on Mars",
+"b_title": "APOD: 2026 November 1 – Colors of the Moon"
+},
+{
+"a": "https://science.nasa.gov/image-article/apod-2026-november-4-the-not-so-hidden-galaxy-ic-342/",
+"b": "https://science.nasa.gov/image-article/apod-2026-november-1-colors-of-the-moon/",
+"label": "diff",
+"a_title": "APOD: 2026 November 4 – The Not-So-Hidden Galaxy, IC 342",
+"b_title": "APOD: 2026 November 1 – Colors of the Moon"
+},
+{
+"a": "https://aerospaceglobalnews.com/news/florida-learjet-crash-investigators-examine-impact-crater/",
+"b": "https://aerospaceglobalnews.com/news/ntsb-investigating-possible-in-flight-breakup-florida-learjet-crash/",
+"label": "related",
+"a_title": "Florida Learjet crash investigators prepare to examine impact crater",
+"b_title": "Florida Learjet crash: NTSB probes evidence aircraft broke up before impact"
+},
+{
+"a": "https://aerospaceglobalnews.com/news/florida-learjet-crash-investigators-examine-impact-crater/",
+"b": "https://aerospaceglobalnews.com/news/florida-learjet-60-crash-black-box-recovery/",
+"label": "related",
+"a_title": "Florida Learjet crash investigators prepare to examine impact crater",
+"b_title": "Learjet 60 crash: Was a black box on board, and could it survive the impact?"
+},
+{
+"a": "https://aerospaceglobalnews.com/news/florida-learjet-60-crash-black-box-recovery/",
+"b": "https://aerospaceglobalnews.com/news/ntsb-investigating-possible-in-flight-breakup-florida-learjet-crash/",
+"label": "related",
+"a_title": "Learjet 60 crash: Was a black box on board, and could it survive the impact?",
+"b_title": "Florida Learjet crash: NTSB probes evidence aircraft broke up before impact"
+},
+{
+"a": "https://aerospaceglobalnews.com/news/ntsb-learjet-60-broke-apart-florida-crash/",
+"b": "https://aerospaceglobalnews.com/news/ntsb-investigating-possible-in-flight-breakup-florida-learjet-crash/",
+"label": "related",
+"a_title": "NTSB finds Learjet 60 wreckage miles from site of fatal Florida crash",
+"b_title": "Florida Learjet crash: NTSB probes evidence aircraft broke up before impact"
+},
+{
+"a": "https://t.me/vselennayaplus/2384",
+"b": "https://t.me/cosmoRaccoon/20333",
+"label": "same",
+"a_title": "С орбиты — прямо в захваты башни",
+"b_title": "SpaceX впервые смогла осуществить захват космического корабля Starship по его возвращении "
+},
+{
+"a": "https://www.nasa.gov/image-article/thunderbirds-in-formation/",
+"b": "https://www.nasa.gov/image-article/heart-in-the-sky-at-nasa-kennedy/",
+"label": "diff",
+"a_title": "Thunderbirds in Formation",
+"b_title": "Heart in the Sky at NASA Kennedy"
+},
+{
+"a": "https://www.space.com/space-exploration/launches-spacecraft/double-catch-drama-why-starships-flight-15-is-so-important-to-spacex",
+"b": "https://www.space.com/space-exploration/launches-spacecraft/spacex-starship-flight-15-1st-booster-ship-double-catch-full-recovery-what-time",
+"label": "diff",
+"a_title": "Double-catch drama: Why Starship's Flight 15 is so important to SpaceX",
+"b_title": "What time will SpaceX launch Starship Flight 15, its 1st double landing test, today? (Full"
+},
+{
+"a": "https://t.me/cosmoRaccoon/20342",
+"b": "https://t.me/cosmoRaccoon/20325",
+"label": "related",
+"a_title": "В 15-м испытательном полёте Starship 42 вышел на орбиту и был пойман башней Mechazilla. Те",
+"b_title": "SpaceX запустила ракету-носитель с кораблем Starship в 15-й испытательный полет."
+},
+{
+"a": "https://phys.org/news/2026-11-tiny-shift-exposes-cold-brown.html",
+"b": "https://www.space.com/astronomy/asteroids/james-webb-space-telescope-uncovers-new-clues-about-the-origins-of-interstellar-invader-comet-3i-atlas",
+"label": "diff",
+"a_title": "A tiny shift exposes a cold brown dwarf masquerading as an early galaxy",
+"b_title": "James Webb Space Telescope uncovers new clues about the origins of 'interstellar invader' "
+},
+{
+"a": "https://www.space.com/space-exploration/launches-spacecraft/whats-next-for-spacexs-starship-after-epic-flight-15-chopsticks-catch",
+"b": "https://www.space.com/space-exploration/launches-spacecraft/relive-starships-historic-flight-15-with-our-best-photos-from-launch-and-mechazilla-tower-catch",
+"label": "related",
+"a_title": "What's next for SpaceX's Starship after epic Flight 15 chopsticks catch?",
+"b_title": "Relive Starship's historic Flight 15 with our best photos from launch and 'Mechazilla' tow"
+},
+{
+"a": "https://www.nasa.gov/image-article/hubble-reveals-cosmic-mystery/",
+"b": "https://science.nasa.gov/missions/hubble/nasas-hubble-uncovers-case-of-missing-oxygen-in-nearby-dwarf-galaxies/",
+"label": "diff",
+"a_title": "Hubble Reveals Cosmic Mystery",
+"b_title": "NASA’s Hubble Uncovers Case of Missing Oxygen in Nearby Dwarf Galaxies"
+},
+{
+"a": "https://www.space.com/space-exploration/human-spaceflight/pakistani-astronaut-set-to-become-1st-international-visitor-to-chinas-tiangong-space-station-this-month",
+"b": "https://www.universetoday.com/articles/the-first-foreign-astronaut-will-visit-chinas-tiangong-space-station-in-two-weeks",
+"label": "same",
+"a_title": "Pakistani astronaut set to become 1st international visitor to China's Tiangong space stat",
+"b_title": "The First Foreign Astronaut Will Visit China's Tiangong Space Station in Two Weeks"
+},
+{
+"a": "https://t.me/prokosmosru/12423",
+"b": "https://t.me/roscosmos_gk/21040",
+"label": "same",
+"a_title": "🌍 Космос без границ: как прошла встреча главы Роскосмоса с послами 40 стран",
+"b_title": "Космос без границ: МИД РФ и Роскосмос обсудили будущее международного сотрудничества с пос"
+},
+{
+"a": "https://spacewatch.global/2026/11/ulas-vulcan-set-for-return-to-flight-with-first-amazon-leo-mission/",
+"b": "https://spaceflightnow.com/2026/11/15/ula-suffers-first-total-mission-failure-with-loss-of-vulcan-rocket-carrying-40-amazon-leo-satellites/",
+"label": "diff",
+"a_title": "ULA’s Vulcan Set for Return to Flight with First Amazon Leo Mission",
+"b_title": "ULA suffers first outright failure with loss of Vulcan rocket carrying 40 Amazon Leo satel"
+},
+{
+"a": "https://nasawatch.com/2026/11/12/nasa-inspector-general-nominee-steinau/",
+"b": "https://spacenews.com/senate-committee-takes-up-nominees-for-nasa-chief-financial-officer-and-inspector-general/",
+"label": "diff",
+"a_title": "NASA Inspector General Nominee Steinau Pledges Aggressive Oversight",
+"b_title": "Senate committee takes up nominees for NASA chief financial officer and inspector general"
+},
+{
+"a": "https://satnews.com/2026/11/04/ses-completes-bidirectional-optical-link-demonstration-with-meosphere-pathfinder-1/",
+"b": "https://www.satellitetoday.com/technology/2026/11/04/ses-reports-optical-communications-demo-on-k2-gravitas-mission/",
+"label": "same",
+"a_title": "SES Completes Bidirectional Optical Link Demonstration with meoSphere Pathfinder 1",
+"b_title": "SES Reports Optical Communications Demo on K2 Gravitas Mission"
+},
+{
+"a": "https://spaceflightnow.com/2026/11/05/as-it-happened-spacewalkers-install-space-stations-eighth-and-final-upgraded-solar-array/",
+"b": "https://spaceflightnow.com/2026/11/05/spacewalkers-complete-five-year-effort-to-upgrade-space-station-power-supply/",
+"label": "same",
+"a_title": "As it happened: spacewalkers install space station’s eighth and final upgraded solar array",
+"b_title": "Spacewalkers complete five-year effort to upgrade space station power supply"
+},
+{
+"a": "https://breakingdefense.com/2026/11/greece-inks-deal-for-kc-390-fleet/",
+"b": "https://aerospaceglobalnews.com/news/greece-embraer-kc-390-order-portugal/",
+"label": "same",
+"a_title": "Greece inks deal for KC-390 fleet",
+"b_title": "Greece orders Embraer KC-390s to boost airlift and aerial refuelling capabilities"
+},
+{
+"a": "https://science.nasa.gov/image-article/apod-2026-november-4-the-not-so-hidden-galaxy-ic-342/",
+"b": "https://science.nasa.gov/image-article/apod-2026-november-2-a-long-cloud-on-mars/",
+"label": "diff",
+"a_title": "APOD: 2026 November 4 – The Not-So-Hidden Galaxy, IC 342",
+"b_title": "APOD: 2026 November 2 – A Long Cloud on Mars"
+},
+{
+"a": "https://breakingdefense.com/2026/11/submarine-maintenance-delays-saw-significant-improvements-in-fy26-sub-czar-says/",
+"b": "https://breakingdefense.com/2026/11/delivering-first-columbia-class-sub-in-2028-is-absolutely-achievable-sub-czar-says/",
+"label": "diff",
+"a_title": "Submarine maintenance delays saw ‘significant’ improvements in FY26, sub czar says",
+"b_title": "Delivering first Columbia-class sub in 2028 is ‘absolutely achievable’, sub czar says"
+},
+{
+"a": "https://phys.org/news/2026-11-space-telescope-euclid-standard-cosmology.html",
+"b": "https://www.theguardian.com/science/2026/nov/12/european-euclid-mission-reveals-900m-galaxies-secrets-dark-universe",
+"label": "same",
+"a_title": "Space telescope Euclid sets the new standard for cosmology",
+"b_title": "European survey reveals 900m galaxies – and possibly secrets of ‘dark universe’"
+},
+{
+"a": "https://www.space.com/space-exploration/launches-spacecraft/whats-next-for-spacexs-starship-after-epic-flight-15-chopsticks-catch",
+"b": "https://www.space.com/space-exploration/launches-spacecraft/spacex-chopsticks-catch-starship-upper-stage-flight-14",
+"label": "related",
+"a_title": "What's next for SpaceX's Starship after epic Flight 15 chopsticks catch?",
+"b_title": "'Now everything changes': SpaceX catches Starship upper stage for 1st time ever (video)"
+},
+{
+"a": "https://t.me/cosmoRaccoon/20337",
+"b": "https://t.me/newscienceru/11802",
+"label": "diff",
+"a_title": "Агентство космического развития США заключило со SpaceX контракт на $9,92 млн, чтобы изучи",
+"b_title": "SpaceX проверит лазерные терминалы Starlink для спутников слежения за гиперзвуковыми ракет"
+},
+{
+"a": "https://t.me/cosmoRaccoon/20342",
+"b": NaN,
+"label": "related",
+"a_title": "В 15-м испытательном полёте Starship 42 вышел на орбиту и был пойман башней Mechazilla. Те",
+"b_title": "🚀 Starship: 15-й тестовый полет, орбита есть, «чопстики» — нет"
+},
+{
+"a": "https://t.me/newscienceru/11819",
+"b": "https://t.me/rscc_rscc/19656",
+"label": "same",
+"a_title": "Япония изменила цель межпланетного зонда «Хаябуса-2» из-за неисправности ионного двигателя",
+"b_title": "Неполадки с единственным оставшимся рабочим двигателем не позволят японскому космическому "
+},
+{
+"a": "https://t.me/cosmoRaccoon/20325",
+"b": "https://t.me/cosmoRaccoon/20294",
+"label": "diff",
+"a_title": "SpaceX запустила ракету-носитель с кораблем Starship в 15-й испытательный полет.",
+"b_title": "SpaceX доставила ускоритель Super Heavy Booster 22 на площадку Starbase перед испытательны"
+},
+{
+"a": "https://www.space.com/stargazing/why-does-betelgeuse-keep-fading-the-mystery-of-orions-giant-star",
+"b": "https://aerospaceglobalnews.com/news/why-boarding-aircraft-still-slow",
+"label": "diff",
+"a_title": "Why does Betelgeuse keep fading? The mystery of Orion's giant star",
+"b_title": "Why is boarding an aircraft still so slow? The biggest causes of airline boarding delays r"
+},
+{
+"a": "https://europeanspaceflight.com/swiss-startup-plans-lunar-lander-powered-by-rotating-detonation-engine/",
+"b": "https://payloadspace.com/exclusive-stellar-alpina-unveils-monarch-orbiter-and-morpho-lunar-lander/",
+"label": "diff",
+"a_title": "Swiss Startup Plans Lunar Lander Powered by Rotating Detonation Engine",
+"b_title": "Exclusive: Stellar Alpina Unveils Monarch Orbiter and Morpho Lunar Lander"
+},
+{
+"a": "https://www.astronomy.com/today-in-the-history-of-astronomy/nov-16-1974-arecibo-sends-a-message/",
+"b": "https://earthsky.org/space/this-date-in-science-first-radio-signal-beamed-to-space/",
+"label": "related",
+"a_title": "Nov. 16, 1974: Arecibo sends a message",
+"b_title": "Humanity’s 1st intentional signal to space 52 years ago"
+},
+{
+"a": "https://www.space.com/space-exploration/launches-spacecraft/spacex-chopsticks-catch-starship-upper-stage-flight-14",
+"b": "https://www.space.com/space-exploration/launches-spacecraft/relive-starships-historic-flight-15-with-our-best-photos-from-launch-and-mechazilla-tower-catch",
+"label": "related",
+"a_title": "'Now everything changes': SpaceX catches Starship upper stage for 1st time ever (video)",
+"b_title": "Relive Starship's historic Flight 15 with our best photos from launch and 'Mechazilla' tow"
+},
+{
+"a": "https://phys.org/news/2026-11-dirty-ice-young-star-beta.html",
+"b": "https://arstechnica.com/science/2026/11/james-webb-telescope-finds-ice-older-than-the-star-it-orbits/",
+"label": "diff",
+"a_title": "Dirty ice around young star Beta Pictoris suggests frequent collisions and sheds light on ",
+"b_title": "James Webb telescope finds ice older than the star it orbits"
+},
+{
+"a": "https://www.nasaspaceflight.com/2026/11/final-irosa-install-iss/",
+"b": "https://spaceflightnow.com/2026/11/05/as-it-happened-spacewalkers-install-space-stations-eighth-and-final-upgraded-solar-array/",
+"label": "same",
+"a_title": "ISS astronauts install final iROSA solar panel to augment aging ISS power systems",
+"b_title": "As it happened: spacewalkers install space station’s eighth and final upgraded solar array"
+},
+{
+"a": "https://phys.org/news/2026-11-iconic-black-hole-image-accurate.html",
+"b": "https://phys.org/news/2026-11-independent-technique-validates-landmark-m87.html",
+"label": "same",
+"a_title": "Is this iconic black hole image accurate? New study delivers an independent result",
+"b_title": "Independent technique validates landmark M87* image"
+},
+{
+"a": "https://www.space.com/space-exploration/on-this-day-in-space-november-3-2026",
+"b": "https://www.astronomy.com/today-in-the-history-of-astronomy/nov-3-1957-the-flight-of-laika/",
+"label": "same",
+"a_title": "On this day in space! Nov. 3, 1957: Laika the dog launches with Sputnik 2",
+"b_title": "Nov. 3, 1957: The flight of Laika"
+},
+{
+"a": "https://t.me/vselennayaplus/2384",
+"b": NaN,
+"label": "same",
+"a_title": "С орбиты — прямо в захваты башни",
+"b_title": "🚀 Starship впервые поймали из орбиты 🤖"
+},
+{
+"a": "https://arstechnica.com/space/2026/11/how-an-artist-gave-shape-to-a-space-shuttles-new-towering-exhibit/",
+"b": "https://www.space.com/space-exploration/californias-brand-new-air-and-space-center-home-of-the-space-shuttle-endeavour-opens-today",
+"label": "diff",
+"a_title": "Artist brings old Space Shuttle tank back to life",
+"b_title": "California's brand-new Air & Space Center, home of the space shuttle Endeavour, opens toda"
+},
+{
+"a": NaN,
+"b": "https://t.me/cosmoRaccoon/20333",
+"label": "same",
+"a_title": "🚀 Starship впервые поймали из орбиты 🤖",
+"b_title": "SpaceX впервые смогла осуществить захват космического корабля Starship по его возвращении "
+},
+{
+"a": "https://t.me/cosmoRaccoon/20342",
+"b": "https://t.me/vselennayaplus/2384",
+"label": "same",
+"a_title": "В 15-м испытательном полёте Starship 42 вышел на орбиту и был пойман башней Mechazilla. Те",
+"b_title": "С орбиты — прямо в захваты башни"
+},
+{
+"a": "https://t.me/roscosmos_gk/21061",
+"b": "https://t.me/cosmoRaccoon/20299",
+"label": "diff",
+"a_title": "⚡️ С космодрома Восточный стартовала ракета-носитель «Союз-2.1б»",
+"b_title": "Два частных спутника при поддержке государства будут впервые запущены в текущем году с кос"
+},
+{
+"a": "https://www.space.com/space-exploration/launches-spacecraft/whats-next-for-spacexs-starship-after-epic-flight-15-chopsticks-catch",
+"b": "https://www.space.com/stargazing/spacexs-starship-megarocket-will-launch-to-orbit-on-nov-13-will-you-be-able-to-spot-it-in-the-night-sky",
+"label": "diff",
+"a_title": "What's next for SpaceX's Starship after epic Flight 15 chopsticks catch?",
+"b_title": "SpaceX's Starship megarocket will launch to orbit on Nov. 13. Will you be able to spot it "
+},
+{
+"a": "https://satnews.com/2026/11/16/satellogic-reports-record-revenue-and-largest-ever-37-million-sovereign-satellite-order/",
+"b": "https://www.spaceintelreport.com/geospatial-satellite-builder-operator-satellogic-reports-record-revenue-says-sovereign-capacity-demand-is-driving-the-market/?utm_source=rss&utm_medium=rss&utm_campaign=geospatial-satellite-builder-operator-satellogic-reports-record-revenue-says-sovereign-capacity-demand-is-driving-the-market",
+"label": "same",
+"a_title": "Satellogic Reports Record Revenue and Largest-Ever $37 Million Sovereign Satellite Order",
+"b_title": "Geospatial satellite builder/operator Satellogic reports record revenue, says sovereign ca"
+},
+{
+"a": "https://www.satellitetoday.com/imagery-and-sensing/2026/11/02/hydrosat-launches-thermal-imaging-capability-for-tactical-isr/",
+"b": "https://satnews.com/2026/11/02/hydrosat-unveils-nyktos-tactical-mwir-program-expands-european-footprint-for-sovereign-isr/",
+"label": "same",
+"a_title": "Hydrosat Launches Thermal Imaging Capability for Tactical ISR",
+"b_title": "Hydrosat Unveils Nyktòs Tactical MWIR Program, Expands European Footprint for Sovereign IS"
+},
+{
+"a": "https://www.space.com/space-exploration/launches-spacecraft/whats-next-for-spacexs-starship-after-epic-flight-15-chopsticks-catch",
+"b": "https://spaceq.ca/starship-flight-15-catch-both-stages-preview/",
+"label": "diff",
+"a_title": "What's next for SpaceX's Starship after epic Flight 15 chopsticks catch?",
+"b_title": "Starship Flight 15 to attempt first catch of both stages"
+},
+{
+"a": "https://www.space.com/space-exploration/voyager/what-exactly-is-a-light-day-heres-what-voyager-1s-latest-milestone-means-for-the-interstellar-probe",
+"b": "https://phys.org/news/2026-11-nasa-voyager-day-interstellar-space.html",
+"label": "diff",
+"a_title": "What exactly is a light-day? Here's what Voyager 1's latest milestone means for the inters",
+"b_title": "NASA's Voyager 1 closes in on a light-day in interstellar space for a new distance record"
+},
+{
+"a": "https://phys.org/news/2026-11-space-telescope-euclid-standard-cosmology.html",
+"b": "https://phys.org/news/2026-11-euclid-3d-universe-date.html",
+"label": "same",
+"a_title": "Space telescope Euclid sets the new standard for cosmology",
+"b_title": "Euclid offers best-ever 3D map of the universe to date"
+},
+{
+"a": "https://phys.org/news/2026-11-stars-oxygen-small-galaxies.html",
+"b": "https://science.nasa.gov/missions/hubble/nasas-hubble-uncovers-case-of-missing-oxygen-in-nearby-dwarf-galaxies/",
+"label": "same",
+"a_title": "Stars make oxygen for small galaxies, but they lose most of it",
+"b_title": "NASA’s Hubble Uncovers Case of Missing Oxygen in Nearby Dwarf Galaxies"
+},
+{
+"a": "https://www.latimes.com/california/story/2026-11-17/pediatrician-congress-california-vaccine-laws-medicaid",
+"b": "https://www.latimes.com/environment/story/2026-11-15/offshore-oil-rigs-could-be-toppled-off-california-under-trump-plan",
+"label": "diff",
+"a_title": "Richard Pan shaped California's strict vaccine laws. Now he takes on new battles in Congre",
+"b_title": "Offshore oil rigs could be 'toppled' off California under Trump plan"
+},
+{
+"a": "https://www.space.com/space-exploration/launches-spacecraft/whats-next-for-spacexs-starship-after-epic-flight-15-chopsticks-catch",
+"b": "https://www.theguardian.com/science/2026/nov/13/spacex-starship-megarocket-blasts-off-earth-orbit",
+"label": "diff",
+"a_title": "What's next for SpaceX's Starship after epic Flight 15 chopsticks catch?",
+"b_title": "SpaceX Starship megarocket blasts off before expected return for reuse"
+},
+{
+"a": "https://t.me/cosmoRaccoon/20325",
+"b": NaN,
+"label": "related",
+"a_title": "SpaceX запустила ракету-носитель с кораблем Starship в 15-й испытательный полет.",
+"b_title": "🚀 Starship: 15-й тестовый полет, орбита есть, «чопстики» — нет"
+},
+{
+"a": "https://www.space.com/astronomy/hubble-space-telescope/nasa-asks-industry-for-ideas-about-saving-hubble-space-telescope",
+"b": "https://www.space.com/astronomy/hubble-space-telescope/hubble-telescope-sees-cosmic-cats-tail-that-could-wrap-around-the-sun-and-earth-500-times",
+"label": "diff",
+"a_title": "NASA asks industry for ideas about saving Hubble Space Telescope",
+"b_title": "Hubble Telescope sees cosmic 'cat's tail' that could wrap around Earth and the sun 500 tim"
+},
+{
+"a": "https://www.nasa.gov/image-article/gemini-astronaut-photos-inspired-early-earth-observation-program/",
+"b": "https://www.space.com/space-exploration/on-this-day-in-space-november-11-2026",
+"label": "diff",
+"a_title": "Gemini Astronaut Photos Inspired Early Earth Observation Program",
+"b_title": "On this day in space! Nov. 11, 1966: NASA launches Gemini 12 mission with astronaut icons "
+},
+{
+"a": "https://spaceflightnow.com/2026/11/07/ast-spacemobile-unveils-1-3-billion-engine-deal-with-firefly-aerospace-to-power-new-heavy-lift-rocket/",
+"b": "https://arstechnica.com/space/2026/11/ast-spacemobile-is-so-desperate-for-launch-theyre-building-their-own-rocket/",
+"label": "diff",
+"a_title": "AST SpaceMobile unveils $1.3 billion engine deal with Firefly Aerospace to power new heavy",
+"b_title": "You know the launch market is tough when satellite companies start building rockets"
+},
+{
+"a": "https://www.geekwire.com/2026/blue-origin-space-station-on-hold-moon/",
+"b": "https://t.me/cosmoRaccoon/20344",
+"label": "same",
+"a_title": "Blue Origin puts its space station plans on hold to concentrate on moon missions instead",
+"b_title": "Blue Origin вышла из конкурса NASA на создание коммерческой орбитальной станции. Её совмес"
+},
+{
+"a": "https://breakingdefense.com/2026/11/vulcan-failure-deepens-concerns-over-us-military-launch-capacity/",
+"b": "https://satnews.com/2026/11/15/ula-vulcan-centaur-suffers-anomaly-during-return-to-flight-losing-40-amazon-leo-satellites/",
+"label": "related",
+"a_title": "Vulcan failure deepens concerns over US military launch capacity",
+"b_title": "ULA Vulcan Centaur Suffers Anomaly During Return to Flight, Losing 40 Amazon Leo Satellite"
+},
+{
+"a": "https://t.me/rscc_rscc/19649",
+"b": "https://t.me/roscosmos_gk/21077",
+"label": "diff",
+"a_title": "✅ «РЕШЕТНЁВ» и НГТУ создали датчики для контроля механизмов спутников",
+"b_title": "Специалисты предприятия Роскосмоса совместно с учёными из Новосибирска создали устройства "
+},
+{
+"a": "https://spaceq.ca/canadian-space-agency-spending-2025-26/",
+"b": "https://spaceq.ca/dnd-departmental-results-report-2025-26/",
+"label": "diff",
+"a_title": "Canadian Space Agency reports spending hit record $1.16 billion",
+"b_title": "DND Departmental Results Report shows space gains and a delay"
+},
+{
+"a": "https://breakingdefense.com/2026/11/vulcan-failure-deepens-concerns-over-us-military-launch-capacity/",
+"b": "https://spaceflightnow.com/2026/11/15/ula-suffers-first-total-mission-failure-with-loss-of-vulcan-rocket-carrying-40-amazon-leo-satellites/",
+"label": "related",
+"a_title": "Vulcan failure deepens concerns over US military launch capacity",
+"b_title": "ULA suffers first outright failure with loss of Vulcan rocket carrying 40 Amazon Leo satel"
+},
+{
+"a": "https://breakingdefense.com/2026/11/vulcan-failure-deepens-concerns-over-us-military-launch-capacity/",
+"b": "https://www.space.com/space-exploration/launches-spacecraft/ula-vulcan-centaur-return-to-flight-amazon-leo-internet-satellite-launch",
+"label": "related",
+"a_title": "Vulcan failure deepens concerns over US military launch capacity",
+"b_title": "ULA's Vulcan Centaur rocket fails during return-to-flight launch, 40 Amazon satellites los"
+},
+{
+"a": "https://satnews.com/2026/11/14/spacex-guides-ship-42-back-to-texas-for-first-orbital-upper-stage-tower-catch/",
+"b": "https://www.space.com/space-exploration/launches-spacecraft/relive-starships-historic-flight-15-with-our-best-photos-from-launch-and-mechazilla-tower-catch",
+"label": "diff",
+"a_title": "SpaceX Guides Ship 42 Back to Texas for First Orbital Upper-Stage Tower Catch",
+"b_title": "Relive Starship's historic Flight 15 with our best photos from launch and 'Mechazilla' tow"
+},
+{
+"a": "https://payloadspace.com/starfish-loses-contact-with-otter-cutting-sspicy-short/",
+"b": "https://www.geekwire.com/2026/starfish-space-loses-contact-otter-sspicy/",
+"label": "same",
+"a_title": "Starfish Loses Contact with Otter, Cutting SSPICY Short",
+"b_title": "Starfish Space loses contact with its Otter spacecraft, ending satellite inspection missio"
+},
+{
+"a": "https://www.astronomy.com/observing/the-sky-today-wednesday-november-4-2026/",
+"b": "https://www.astronomy.com/observing/the-sky-today-monday-november-2-2026/",
+"label": "diff",
+"a_title": "The Sky Today on Wednesday, November 4: Venus and Spica stand close",
+"b_title": "The Sky Today on Monday, November 2: The Moon passes Jupiter and Mars"
+},
+{
+"a": "https://www.nasa.gov/image-article/hubble-reveals-cosmic-mystery/",
+"b": "https://phys.org/news/2026-11-stars-oxygen-small-galaxies.html",
+"label": "related",
+"a_title": "Hubble Reveals Cosmic Mystery",
+"b_title": "Stars make oxygen for small galaxies, but they lose most of it"
+},
+{
+"a": "https://aerospaceglobalnews.com/news/ntsb-learjet-60-broke-apart-florida-crash/",
+"b": "https://aerospaceglobalnews.com/news/florida-learjet-crash-investigators-examine-impact-crater/",
+"label": "related",
+"a_title": "NTSB finds Learjet 60 wreckage miles from site of fatal Florida crash",
+"b_title": "Florida Learjet crash investigators prepare to examine impact crater"
+},
+{
+"a": "https://phys.org/news/2026-11-cosmic-leaf-blower-propelled-early.html",
+"b": "https://phys.org/news/2026-11-pulsars-mass-limits-supermassive-black.html",
+"label": "diff",
+"a_title": "A cosmic 'leaf blower': Light-propelled winds help explain early universe's bright galaxie",
+"b_title": "Pulsars set first mass limits on supermassive black hole pairs in the early universe"
+},
+{
+"a": "https://t.me/vselennayaplus/2384",
+"b": "https://t.me/cosmoRaccoon/20325",
+"label": "related",
+"a_title": "С орбиты — прямо в захваты башни",
+"b_title": "SpaceX запустила ракету-носитель с кораблем Starship в 15-й испытательный полет."
+},
+{
+"a": "https://aerospaceglobalnews.com/news/ntsb-learjet-60-broke-apart-florida-crash/",
+"b": "https://aerospaceglobalnews.com/news/florida-learjet-60-crash-black-box-recovery/",
+"label": "related",
+"a_title": "NTSB finds Learjet 60 wreckage miles from site of fatal Florida crash",
+"b_title": "Learjet 60 crash: Was a black box on board, and could it survive the impact?"
+},
+{
+"a": "https://t.me/rscc_rscc/19630",
+"b": NaN,
+"label": "related",
+"a_title": "🔥 Сегодня в 1.47 по Москве из Техаса взлетела ракета Starship. Хотя она безупречно вывела ",
+"b_title": "🚀 Starship: 15-й тестовый полет, орбита есть, «чопстики» — нет"
+},
+{
+"a": "https://spacepolicyonline.com/news/china-plans-two-launches-lunar-orbit-rendezvous-to-land-taikonauts-on-moon/",
+"b": "https://www.china-in-space.com/p/china-details-precursors-to-crewed",
+"label": "diff",
+"a_title": "China Plans “Two Launches, Lunar Orbit Rendezvous” to Land Taikonauts on Moon",
+"b_title": "China Details Precursors to Crewed Moon Landing, Considers Future Exploration"
+},
+{
+"a": "https://spacewatch.global/2026/11/spaceium-unveils-openport-refueling-interface-with-1-licensing-offer-for-satellite-manufacturers/",
+"b": "https://payloadspace.com/exclusive-spaceium-opens-license-for-refueling-hardware/",
+"label": "same",
+"a_title": "Spaceium Unveils OpenPort Refueling Interface With $1 Licensing Offer for Satellite Manufa",
+"b_title": "Exclusive: Spaceium Opens License for Refueling Hardware"
+},
+{
+"a": "https://www.satellitetoday.com/imagery-and-sensing/2026/11/02/hydrosat-launches-thermal-imaging-capability-for-tactical-isr/",
+"b": "https://payloadspace.com/hydrosat-unveils-new-high-res-mwir-thermal-capability/",
+"label": "same",
+"a_title": "Hydrosat Launches Thermal Imaging Capability for Tactical ISR",
+"b_title": "Hydrosat Unveils New High-Res MWIR Thermal Capability"
+},
+{
+"a": "https://spaceflightnow.com/2026/11/04/nasas-neil-gehrels-swift-observatory-reenters-over-western-indonesia/",
+"b": "https://satnews.com/2026/11/01/nasas-swift-observatory-expected-to-burn-up-in-atmospheric-reentry-following-failed-commercial-rescue/",
+"label": "related",
+"a_title": "NASA’s Neil Gehrels Swift Observatory reenters over Western Indonesia",
+"b_title": "NASA’s Swift Observatory Expected to Burn Up in Atmospheric Reentry Following Failed Comme"
+},
+{
+"a": "https://t.me/cosmoRaccoon/20325",
+"b": "https://t.me/cosmoRaccoon/20333",
+"label": "related",
+"a_title": "SpaceX запустила ракету-носитель с кораблем Starship в 15-й испытательный полет.",
+"b_title": "SpaceX впервые смогла осуществить захват космического корабля Starship по его возвращении "
+},
+{
+"a": "https://www.cbsnews.com/news/spacex-catch-starship-rocket/",
+"b": "https://phys.org/news/2026-11-spacex-starship-earth-booster-aborted.html",
+"label": "related",
+"a_title": "SpaceX pulls off first Starship recovery from orbit in spectacular fashion",
+"b_title": "SpaceX's Starship set for return to Earth after booster catch aborted"
+},
+{
+"a": "https://t.me/rscc_rscc/19647",
+"b": "https://t.me/rscc_rscc/19644",
+"label": "same",
+"a_title": "Конкурент Starlink потерял 40 спутников разом: первый после перерыва пуск ракеты Vulcan Ce",
+"b_title": "🚀Ракета Vulcan Centaur компании United Launch Alliance не смогла вывести на орбиту 40 спут"
+},
+{
+"a": "https://www.space.com/space-exploration/launches-spacecraft/dont-panic-spacex-pens-familiar-message-on-starship-ahead-of-historic-double-catch-test-flight",
+"b": "https://www.space.com/space-exploration/launches-spacecraft/spacex-starship-flight-15-1st-booster-ship-double-catch-full-recovery-what-time",
+"label": "diff",
+"a_title": "'Don't panic': SpaceX pens familiar message on Starship ahead of historic double-catch tes",
+"b_title": "What time will SpaceX launch Starship Flight 15, its 1st double landing test, today? (Full"
+},
+{
+"a": "https://www.space.com/space-exploration/launches-spacecraft/double-catch-drama-why-starships-flight-15-is-so-important-to-spacex",
+"b": "https://www.space.com/space-exploration/launches-spacecraft/relive-starships-historic-flight-15-with-our-best-photos-from-launch-and-mechazilla-tower-catch",
+"label": "diff",
+"a_title": "Double-catch drama: Why Starship's Flight 15 is so important to SpaceX",
+"b_title": "Relive Starship's historic Flight 15 with our best photos from launch and 'Mechazilla' tow"
+},
+{
+"a": "https://spaceq.ca/starship-flight-15-catch-both-stages-preview/",
+"b": "https://www.space.com/space-exploration/launches-spacecraft/spacex-starship-flight-15-1st-booster-ship-double-catch-full-recovery-what-time",
+"label": "diff",
+"a_title": "Starship Flight 15 to attempt first catch of both stages",
+"b_title": "What time will SpaceX launch Starship Flight 15, its 1st double landing test, today? (Full"
+},
+{
+"a": "https://satnews.com/2026/11/02/hydrosat-unveils-nyktos-tactical-mwir-program-expands-european-footprint-for-sovereign-isr/",
+"b": "https://payloadspace.com/hydrosat-unveils-new-high-res-mwir-thermal-capability/",
+"label": "same",
+"a_title": "Hydrosat Unveils Nyktòs Tactical MWIR Program, Expands European Footprint for Sovereign IS",
+"b_title": "Hydrosat Unveils New High-Res MWIR Thermal Capability"
+},
+{
+"a": "https://spacewatch.global/2026/11/ulas-vulcan-set-for-return-to-flight-with-first-amazon-leo-mission/",
+"b": "https://satnews.com/2026/11/15/ula-vulcan-centaur-suffers-anomaly-during-return-to-flight-losing-40-amazon-leo-satellites/",
+"label": "diff",
+"a_title": "ULA’s Vulcan Set for Return to Flight with First Amazon Leo Mission",
+"b_title": "ULA Vulcan Centaur Suffers Anomaly During Return to Flight, Losing 40 Amazon Leo Satellite"
+},
+{
+"a": "https://nasawatch.com/2026/11/13/23204/",
+"b": "https://nasawatch.com/2026/11/12/nasa-oig-top-challenges-2026/",
+"label": "diff",
+"a_title": "Another NASA OIG Challenges Report",
+"b_title": "OIG To NASA: Watch Your Commercial Contracts"
+},
+{
+"a": "https://www.latimes.com/science/story/2026-11-17/nasas-voyager-1-to-reach-record-breaking-light-day-distance-from-earth",
+"b": "https://www.latimes.com/environment/story/2026-11-15/offshore-oil-rigs-could-be-toppled-off-california-under-trump-plan",
+"label": "diff",
+"a_title": "NASA's Voyager 1 will soon be so far away that its messages take a day to reach Earth",
+"b_title": "Offshore oil rigs could be 'toppled' off California under Trump plan"
+},
+{
+"a": "https://spaceq.ca/starship-flight-15-catch-both-stages-preview/",
+"b": "https://t.me/cosmoRaccoon/20294",
+"label": "diff",
+"a_title": "Starship Flight 15 to attempt first catch of both stages",
+"b_title": "SpaceX доставила ускоритель Super Heavy Booster 22 на площадку Starbase перед испытательны"
+},
+{
+"a": "https://www.space.com/space-exploration/launches-spacecraft/ula-vulcan-centaur-return-to-flight-amazon-leo-internet-satellite-launch",
+"b": "https://spaceflightnow.com/2026/11/15/ula-suffers-first-total-mission-failure-with-loss-of-vulcan-rocket-carrying-40-amazon-leo-satellites/",
+"label": "same",
+"a_title": "ULA's Vulcan Centaur rocket fails during return-to-flight launch, 40 Amazon satellites los",
+"b_title": "ULA suffers first outright failure with loss of Vulcan rocket carrying 40 Amazon Leo satel"
+},
+{
+"a": "https://satnews.com/2026/11/15/ula-vulcan-centaur-suffers-anomaly-during-return-to-flight-losing-40-amazon-leo-satellites/",
+"b": "https://spaceflightnow.com/2026/11/15/ula-suffers-first-total-mission-failure-with-loss-of-vulcan-rocket-carrying-40-amazon-leo-satellites/",
+"label": "same",
+"a_title": "ULA Vulcan Centaur Suffers Anomaly During Return to Flight, Losing 40 Amazon Leo Satellite",
+"b_title": "ULA suffers first outright failure with loss of Vulcan rocket carrying 40 Amazon Leo satel"
+},
+{
+"a": "https://www.space.com/space-exploration/launches-spacecraft/dont-panic-spacex-pens-familiar-message-on-starship-ahead-of-historic-double-catch-test-flight",
+"b": "https://www.space.com/space-exploration/launches-spacecraft/relive-starships-historic-flight-15-with-our-best-photos-from-launch-and-mechazilla-tower-catch",
+"label": "diff",
+"a_title": "'Don't panic': SpaceX pens familiar message on Starship ahead of historic double-catch tes",
+"b_title": "Relive Starship's historic Flight 15 with our best photos from launch and 'Mechazilla' tow"
+},
+{
+"a": "https://www.theguardian.com/science/2026/nov/16/starwatch-fleeting-brilliance-of-leonid-meteor-shower-to-hit-peak",
+"b": "https://www.space.com/stargazing/meteor-showers/60-years-ago-the-leonid-meteor-shower-produced-144-000-meteors-per-hour-could-it-happen-again",
+"label": "diff",
+"a_title": "Starwatch: Fleeting brilliance of Leonid meteor shower to hit peak",
+"b_title": "60 years ago the Leonid meteor shower produced 144,000 meteors per hour. Could it happen a"
+},
+{
+"a": "https://www.space.com/space-exploration/launches-spacecraft/whats-next-for-spacexs-starship-after-epic-flight-15-chopsticks-catch",
+"b": "https://www.space.com/space-exploration/launches-spacecraft/spacex-starship-flight-15-1st-booster-ship-double-catch-full-recovery-what-time",
+"label": "diff",
+"a_title": "What's next for SpaceX's Starship after epic Flight 15 chopsticks catch?",
+"b_title": "What time will SpaceX launch Starship Flight 15, its 1st double landing test, today? (Full"
+},
+{
+"a": "https://www.space.com/space-exploration/launches-spacecraft/whats-next-for-spacexs-starship-after-epic-flight-15-chopsticks-catch",
+"b": "https://www.space.com/space-exploration/launches-spacecraft/double-catch-drama-why-starships-flight-15-is-so-important-to-spacex",
+"label": "diff",
+"a_title": "What's next for SpaceX's Starship after epic Flight 15 chopsticks catch?",
+"b_title": "Double-catch drama: Why Starship's Flight 15 is so important to SpaceX"
+},
+{
+"a": "https://www.space.com/space-exploration/launches-spacecraft/ula-vulcan-centaur-return-to-flight-amazon-leo-internet-satellite-launch",
+"b": "https://spacewatch.global/2026/11/ulas-vulcan-set-for-return-to-flight-with-first-amazon-leo-mission/",
+"label": "diff",
+"a_title": "ULA's Vulcan Centaur rocket fails during return-to-flight launch, 40 Amazon satellites los",
+"b_title": "ULA’s Vulcan Set for Return to Flight with First Amazon Leo Mission"
+},
+{
+"a": "https://satnews.com/2026/11/02/mda-space-secures-c100m-thales-alenia-space-award-for-first-66-iris%c2%b2-satellites/",
+"b": "https://europeanspaceflight.com/canadian-mda-space-secures-e64-million-iris2-antenna-agreement/",
+"label": "same",
+"a_title": "MDA Space Secures C$100M+ Thales Alenia Space Award for First 66 IRIS² Satellites",
+"b_title": "Canadian MDA Space Secures €64 Million IRIS2 Antenna Agreement"
+},
+{
+"a": "https://www.astronomy.com/observing/the-sky-today-wednesday-november-4-2026/",
+"b": "https://www.astronomy.com/observing/the-sky-today-sunday-november-1-2026/",
+"label": "diff",
+"a_title": "The Sky Today on Wednesday, November 4: Venus and Spica stand close",
+"b_title": "The Sky Today on Sunday, November 1: The Moon in Cancer"
+},
+{
+"a": "https://www.teslarati.com/elon-musks-grok-bot-is-picking-up-the-phone-now-and-the-first-calls-are-wild/",
+"b": "https://www.teslarati.com/grok-bot-users-hit-weekly-limits-early-elon-musk-explains-what-happened/",
+"label": "diff",
+"a_title": "Elon Musk’s Grok Bot is picking up the phone now, and the first calls are wild",
+"b_title": "Grok Bot users hit with weekly limits early, Elon Musk explains what happened"
+},
+{
+"a": "https://t.me/rscc_rscc/19548",
+"b": "https://satnews.com/2026/11/02/mda-space-secures-c100m-thales-alenia-space-award-for-first-66-iris%c2%b2-satellites/",
+"label": "same",
+"a_title": "MDA Space построит антенные подсистемы для 66 спутников IRIS² на низкой околоземной орбите",
+"b_title": "MDA Space Secures C$100M+ Thales Alenia Space Award for First 66 IRIS² Satellites"
+},
+{
+"a": "https://www.space.com/astronomy/hubble-space-telescope/nasa-asks-industry-for-ideas-about-saving-hubble-space-telescope",
+"b": "https://www.nasaspaceflight.com/2026/11/uncontrolled-reentry-boost-hubble-science-isaacman/",
+"label": "diff",
+"a_title": "NASA asks industry for ideas about saving Hubble Space Telescope",
+"b_title": "Avoiding an uncontrolled reentry; boost Hubble and keep the science – Isaacman"
+},
+{
+"a": "https://spacepolicyonline.com/news/spacex-catches-a-starship/",
+"b": "https://www.theguardian.com/science/2026/nov/13/spacex-starship-megarocket-blasts-off-earth-orbit",
+"label": "related",
+"a_title": "SpaceX Catches a Starship",
+"b_title": "SpaceX Starship megarocket blasts off before expected return for reuse"
+},
+{
+"a": "https://www.space.com/astronomy/hubble-space-telescope/nasa-asks-industry-for-ideas-about-saving-hubble-space-telescope",
+"b": "https://www.cbsnews.com/news/nasa-telescope-swift-observatory-plunging-back-to-earth/",
+"label": "diff",
+"a_title": "NASA asks industry for ideas about saving Hubble Space Telescope",
+"b_title": "NASA telescope is plunging back to Earth after 22 years in orbit"
+},
+{
+"a": "https://www.space.com/astronomy/hubble-space-telescope/nasa-asks-industry-for-ideas-about-saving-hubble-space-telescope",
+"b": "https://phys.org/news/2026-11-stars-oxygen-small-galaxies.html",
+"label": "diff",
+"a_title": "NASA asks industry for ideas about saving Hubble Space Telescope",
+"b_title": "Stars make oxygen for small galaxies, but they lose most of it"
+},
+{
+"a": "https://www.theguardian.com/science/2026/nov/13/spacex-starship-megarocket-blasts-off-earth-orbit",
+"b": "https://t.me/cosmoRaccoon/20294",
+"label": "diff",
+"a_title": "SpaceX Starship megarocket blasts off before expected return for reuse",
+"b_title": "SpaceX доставила ускоритель Super Heavy Booster 22 на площадку Starbase перед испытательны"
+},
+{
+"a": "https://t.me/cosmoRaccoon/20301",
+"b": "https://t.me/rscc_rscc/19603",
+"label": "diff",
+"a_title": "Университет Решетнева в Красноярске представил программу для проектирования сетей связи, о",
+"b_title": "В России создали уникальную систему проектирования гибридных сетей связи"
+},
+{
+"a": "https://satnews.com/2026/11/14/spacex-guides-ship-42-back-to-texas-for-first-orbital-upper-stage-tower-catch/",
+"b": "https://spaceq.ca/starship-flight-15-catch-both-stages-preview/",
+"label": "diff",
+"a_title": "SpaceX Guides Ship 42 Back to Texas for First Orbital Upper-Stage Tower Catch",
+"b_title": "Starship Flight 15 to attempt first catch of both stages"
+},
+{
+"a": "https://www.china-in-space.com/p/tenth-long-march-12-adds-to-guowang",
+"b": "https://www.china-in-space.com/p/new-yaogan-satellite-trio-launched",
+"label": "diff",
+"a_title": "Tenth Long March 12 Adds to GuoWang Constellation [Long March 12 Y11]",
+"b_title": "New Yaogan Satellite Trio Launched out of Xichang [Long March 2C]"
+},
+{
+"a": "https://earthsky.org/astronomy-essentials/everything-you-need-to-know-leonid-meteor-shower/",
+"b": "https://www.space.com/stargazing/meteor-showers/60-years-ago-the-leonid-meteor-shower-produced-144-000-meteors-per-hour-could-it-happen-again",
+"label": "related",
+"a_title": "Leonid meteor shower: All you need to know in 2026",
+"b_title": "60 years ago the Leonid meteor shower produced 144,000 meteors per hour. Could it happen a"
+},
+{
+"a": "https://www.satellitetoday.com/government-military/2026/11/12/ukraine-reports-more-restrictions-to-starshield-access/",
+"b": "https://satnews.com/2026/11/12/ukraine-reports-renewed-starshield-velocity-restrictions-on-military-drones/",
+"label": "same",
+"a_title": "Ukraine Reports More Restrictions to Starshield Access",
+"b_title": "Ukraine Reports Renewed Starshield Velocity Restrictions on Military Drones"
+},
+{
+"a": "https://satnews.com/2026/11/16/aac-clyde-space-nine-month-sales-rise-25-amid-component-supply-warnings/",
+"b": "https://www.spaceintelreport.com/smallsat-builder-operator-aac-clyde-space-revenue-ebitda-backlog-up-sharply-in-2026-component-shortages-an-issue/?utm_source=rss&utm_medium=rss&utm_campaign=smallsat-builder-operator-aac-clyde-space-revenue-ebitda-backlog-up-sharply-in-2026-component-shortages-an-issue",
+"label": "same",
+"a_title": "AAC Clyde Space Nine-Month Sales Rise 25% Amid Component Supply Warnings",
+"b_title": "Smallsat builder/operator AAC Clyde Space: Revenue, EBITDA, backlog up sharply in 2026, co"
+},
+{
+"a": "https://t.me/prokosmosru/12426",
+"b": NaN,
+"label": "same",
+"a_title": "🌌 Опубликован первый крупный массив данных «Евклида»",
+"b_title": "Евклид опубликовал первый пакет данных DR1-Foundation 🔭"
+},
+{
+"a": "https://satnews.com/2026/11/14/story-3-the-technology-electric-and-green-thrusters-reshape-satellite-propulsion-architectures/",
+"b": "https://satnews.com/2026/11/14/electric-and-green-systems-propel-satellite-propulsion-market/",
+"label": "diff",
+"a_title": "Story 3 The Technology: Electric and Green Thrusters Reshape Satellite Propulsion Architec",
+"b_title": "Electric and Green Systems Propel Satellite Propulsion Market"
+},
+{
+"a": "https://www.satellitetoday.com/connectivity/2026/11/04/spacex-strikes-deal-with-qualcomm-for-terrestrial-component-of-starlink-mobile-network/",
+"b": "https://www.teslarati.com/spacex-moves-challenge-att-verizon-qualcomm-powered-5g/",
+"label": "diff",
+"a_title": "SpaceX Strikes Deal with Qualcomm for Terrestrial Component of Starlink Mobile Network",
+"b_title": "SpaceX moves to challenge AT&T, Verizon with Qualcomm-powered 5G"
+},
+{
+"a": "https://www.space.com/space-exploration/launches-spacecraft/spacex-chopsticks-catch-starship-upper-stage-flight-14",
+"b": "https://www.space.com/space-exploration/launches-spacecraft/double-catch-drama-why-starships-flight-15-is-so-important-to-spacex",
+"label": "diff",
+"a_title": "'Now everything changes': SpaceX catches Starship upper stage for 1st time ever (video)",
+"b_title": "Double-catch drama: Why Starship's Flight 15 is so important to SpaceX"
+},
+{
+"a": "https://www.astronomy.com/observing/sky-this-month-november-2026/",
+"b": "https://www.astronomy.com/observing/november-2026-whats-in-the-southern-hemisphere-sky-this-month/",
+"label": "diff",
+"a_title": "November 2026: What’s in the sky this month?",
+"b_title": "November 2026: What’s in the Southern Hemisphere sky this month?"
+},
+{
+"a": "https://www.satellitetoday.com/imagery-and-sensing/2026/11/16/iceyes-fifth-generation-sar-satellite-built-for-11cm-resolution/",
+"b": "https://satnews.com/2026/11/16/iceye-unveils-gen5-sar-satellite-with-11-centimeter-resolution-and-onboard-ai/",
+"label": "same",
+"a_title": "Iceye’s Fifth Generation SAR Satellite Built for 11cm Resolution",
+"b_title": "ICEYE Unveils Gen5 SAR Satellite With 11-Centimeter Resolution and Onboard AI"
+},
+{
+"a": "https://t.me/rscc_rscc/19623",
+"b": "https://t.me/cosmoRaccoon/20308",
+"label": "same",
+"a_title": "SWISSto12 завершила критическую экспертизу проектов антенн 5G NTN для спутников Univity",
+"b_title": "SWISSto12 завершила проверку конструкции антенн для демонстрационных спутников UNIVITY и г"
+},
+{
+"a": "https://satnews.com/2026/11/14/story-2-the-players-prime-contractors-and-newspace-suppliers-compete-in-4-66-billion-propulsion-sector/",
+"b": "https://satnews.com/2026/11/14/story-1-the-market-satellite-propulsion-market-projected-to-reach-4-66-billion/",
+"label": "diff",
+"a_title": "Story 2 The Players: Prime Contractors and NewSpace Suppliers Compete in $4.66 Billion Pro",
+"b_title": "Story 1 The Market: Satellite Propulsion Market Projected to Reach $4.66 Billion"
+},
+{
+"a": "https://t.me/rscc_rscc/19552",
+"b": "https://t.me/rscc_rscc/19543",
+"label": "diff",
+"a_title": "4 ноября одному из крупнейших операторов спутниковой связи — государственному предприятию ",
+"b_title": "ФГУП \"Космическая связь\" планирует запустить в 2029-2030 годах восемь новых спутников связ"
+},
+{
+"a": "https://www.china-in-space.com/p/state-owned-commercial-launch-vehicle",
+"b": "https://www.china-in-space.com/p/tenth-long-march-12-adds-to-guowang",
+"label": "diff",
+"a_title": "State-Owned Commercial Launch Vehicle Group Looks to Raise External Capital",
+"b_title": "Tenth Long March 12 Adds to GuoWang Constellation [Long March 12 Y11]"
+},
+{
+"a": "https://t.me/rscc_rscc/19543",
+"b": "https://t.me/rscc_rscc/19537",
+"label": "diff",
+"a_title": "ФГУП \"Космическая связь\" планирует запустить в 2029-2030 годах восемь новых спутников связ",
+"b_title": "Спрос и предложение на рынке спутниковой связи к 2030 году будут абсолютно равнозначны - т"
+},
+{
+"a": "https://www.nasaspaceflight.com/2026/11/final-irosa-install-iss/",
+"b": "https://spaceflightnow.com/2026/11/05/spacewalkers-complete-five-year-effort-to-upgrade-space-station-power-supply/",
+"label": "same",
+"a_title": "ISS astronauts install final iROSA solar panel to augment aging ISS power systems",
+"b_title": "Spacewalkers complete five-year effort to upgrade space station power supply"
+},
+{
+"a": "https://breakingdefense.com/2026/11/vulcan-failure-deepens-concerns-over-us-military-launch-capacity/",
+"b": "https://t.me/rscc_rscc/19644",
+"label": "related",
+"a_title": "Vulcan failure deepens concerns over US military launch capacity",
+"b_title": "🚀Ракета Vulcan Centaur компании United Launch Alliance не смогла вывести на орбиту 40 спут"
+},
+{
+"a": "https://www.theguardian.com/science/audio/2026/nov/17/nasa-voyager-1-probe-incredible-milestone-podcast",
+"b": "https://www.space.com/space-exploration/voyager/what-exactly-is-a-light-day-heres-what-voyager-1s-latest-milestone-means-for-the-interstellar-probe",
+"label": "related",
+"a_title": "Nasa’s Voyager 1 probe in sight of an incredible milestone – podcast",
+"b_title": "What exactly is a light-day? Here's what Voyager 1's latest milestone means for the inters"
+},
+{
+"a": "https://t.me/rscc_rscc/19552",
+"b": "https://t.me/rscc_rscc/19537",
+"label": "diff",
+"a_title": "4 ноября одному из крупнейших операторов спутниковой связи — государственному предприятию ",
+"b_title": "Спрос и предложение на рынке спутниковой связи к 2030 году будут абсолютно равнозначны - т"
+},
+{
+"a": "https://www.space.com/stargazing/spacexs-starship-megarocket-will-launch-to-orbit-on-nov-13-will-you-be-able-to-spot-it-in-the-night-sky",
+"b": "https://spaceq.ca/starship-flight-15-catch-both-stages-preview/",
+"label": "diff",
+"a_title": "SpaceX's Starship megarocket will launch to orbit on Nov. 13. Will you be able to spot it ",
+"b_title": "Starship Flight 15 to attempt first catch of both stages"
+},
+{
+"a": "https://www.astronomy.com/science/van-goghs-starry-night-shows-a-real-night-sky-study-suggests/",
+"b": "https://www.universetoday.com/articles/new-research-resolves-the-mystery-behind-van-goghs-the-starry-night",
+"label": "same",
+"a_title": "Van Gogh’s Starry Night shows a real night sky, study suggests",
+"b_title": "New Research Resolves the Mystery Behind Van Gogh's The Starry Night"
+},
+{
+"a": "https://www.space.com/space-exploration/launches-spacecraft/spacex-chopsticks-catch-starship-upper-stage-flight-14",
+"b": "https://www.space.com/space-exploration/launches-spacecraft/spacex-starship-flight-15-1st-booster-ship-double-catch-full-recovery-what-time",
+"label": "diff",
+"a_title": "'Now everything changes': SpaceX catches Starship upper stage for 1st time ever (video)",
+"b_title": "What time will SpaceX launch Starship Flight 15, its 1st double landing test, today? (Full"
+},
+{
+"a": "https://t.me/cosmoRaccoon/20291",
+"b": "https://spaceflightnow.com/2026/11/07/ast-spacemobile-unveils-1-3-billion-engine-deal-with-firefly-aerospace-to-power-new-heavy-lift-rocket/",
+"label": "same",
+"a_title": "Американская компания AST SpaceMobile, создающая спутниковую сеть сотовой связи для обычны",
+"b_title": "AST SpaceMobile unveils $1.3 billion engine deal with Firefly Aerospace to power new heavy"
+},
+{
+"a": "https://www.china-in-space.com/p/space-science-boosting-mission-begins",
+"b": "https://www.china-in-space.com/p/tenth-long-march-12-adds-to-guowang",
+"label": "diff",
+"a_title": "Space Science Boosting Mission Begins via Improved Rocket [Long March 2D Y108]",
+"b_title": "Tenth Long March 12 Adds to GuoWang Constellation [Long March 12 Y11]"
+},
+{
+"a": "https://www.space.com/space-exploration/launches-spacecraft/whats-next-for-spacexs-starship-after-epic-flight-15-chopsticks-catch",
+"b": "https://www.space.com/space-exploration/launches-spacecraft/dont-panic-spacex-pens-familiar-message-on-starship-ahead-of-historic-double-catch-test-flight",
+"label": "diff",
+"a_title": "What's next for SpaceX's Starship after epic Flight 15 chopsticks catch?",
+"b_title": "'Don't panic': SpaceX pens familiar message on Starship ahead of historic double-catch tes"
+},
+{
+"a": "https://www.universetoday.com/articles/china-signals-its-intention-to-land-on-jupiters-moon-callisto",
+"b": "https://www.china-in-space.com/p/china-opens-jupiter-mission-callisto",
+"label": "same",
+"a_title": "China Signals Its Intention to Land on Jupiter's Moon Callisto",
+"b_title": "China Opens Jupiter Mission, Callisto Lander to Worldwide Partners"
+},
+{
+"a": "https://phys.org/news/2026-11-europe-hera-spacecraft-asteroid-rammed.html",
+"b": "https://spacewatch.global/2026/11/esas-hera-captures-first-close-up-image-of-didymos-binary-asteroid-system/",
+"label": "same",
+"a_title": "Europe's Hera spacecraft begins close inspections of an asteroid rammed by NASA in a 2022 ",
+"b_title": "ESA’s Hera Captures First Close-Up Image of Didymos Binary Asteroid System"
+},
+{
+"a": "https://www.theguardian.com/science/2026/nov/13/spacex-starship-megarocket-blasts-off-earth-orbit",
+"b": "https://www.space.com/stargazing/spacexs-starship-megarocket-will-launch-to-orbit-on-nov-13-will-you-be-able-to-spot-it-in-the-night-sky",
+"label": "diff",
+"a_title": "SpaceX Starship megarocket blasts off before expected return for reuse",
+"b_title": "SpaceX's Starship megarocket will launch to orbit on Nov. 13. Will you be able to spot it "
+},
+{
+"a": "https://t.me/cosmoRaccoon/20294",
+"b": "https://www.nasaspaceflight.com/2026/11/starship-flight-15-awaits-faa/",
+"label": "diff",
+"a_title": "SpaceX доставила ускоритель Super Heavy Booster 22 на площадку Starbase перед испытательны",
+"b_title": "Starship Flight 15, a dual catch attempt, awaits FAA green light"
+},
+{
+"a": "https://www.space.com/space-exploration/launches-spacecraft/double-catch-drama-why-starships-flight-15-is-so-important-to-spacex",
+"b": "https://www.space.com/space-exploration/launches-spacecraft/dont-panic-spacex-pens-familiar-message-on-starship-ahead-of-historic-double-catch-test-flight",
+"label": "diff",
+"a_title": "Double-catch drama: Why Starship's Flight 15 is so important to SpaceX",
+"b_title": "'Don't panic': SpaceX pens familiar message on Starship ahead of historic double-catch tes"
+},
+{
+"a": "https://www.astronomy.com/observing/the-sky-today-monday-november-16-2026/",
+"b": "https://www.astronomy.com/observing/the-sky-today-sunday-november-15-2026/",
+"label": "diff",
+"a_title": "The Sky Today on Monday, November 16: Titan south, Rhea north",
+"b_title": "The Sky Today on Sunday, November 15: Mars and Jupiter in conjunction"
+},
+{
+"a": "https://www.space.com/space-exploration/launches-spacecraft/double-catch-drama-why-starships-flight-15-is-so-important-to-spacex",
+"b": "https://spaceq.ca/starship-flight-15-catch-both-stages-preview/",
+"label": "diff",
+"a_title": "Double-catch drama: Why Starship's Flight 15 is so important to SpaceX",
+"b_title": "Starship Flight 15 to attempt first catch of both stages"
+},
+{
+"a": "https://aerospaceglobalnews.com/news/florida-learjet-crash-investigators-examine-impact-crater/",
+"b": "https://aerospaceglobalnews.com/news/learjet-60-crash-thunderstorm-risks-cruising-altitude/",
+"label": "diff",
+"a_title": "Florida Learjet crash investigators prepare to examine impact crater",
+"b_title": "Learjet 60 crash: How thunderstorms affect aircraft at cruising altitude"
+},
+{
+"a": "https://aerospaceglobalnews.com/news/florida-learjet-60-crash-black-box-recovery/",
+"b": "https://aerospaceglobalnews.com/news/learjet-60-crash-thunderstorm-risks-cruising-altitude/",
+"label": "diff",
+"a_title": "Learjet 60 crash: Was a black box on board, and could it survive the impact?",
+"b_title": "Learjet 60 crash: How thunderstorms affect aircraft at cruising altitude"
+},
+{
+"a": "https://aerospaceglobalnews.com/news/ntsb-investigating-possible-in-flight-breakup-florida-learjet-crash/",
+"b": "https://aerospaceglobalnews.com/news/learjet-60-crash-thunderstorm-risks-cruising-altitude/",
+"label": "diff",
+"a_title": "Florida Learjet crash: NTSB probes evidence aircraft broke up before impact",
+"b_title": "Learjet 60 crash: How thunderstorms affect aircraft at cruising altitude"
+},
+{
+"a": "https://aerospaceglobalnews.com/news/learjet-60-crash-thunderstorm-risks-cruising-altitude/",
+"b": "https://aerospaceglobalnews.com/news/learjet-60-crash-horizontal-stabiliser-explained/",
+"label": "diff",
+"a_title": "Learjet 60 crash: How thunderstorms affect aircraft at cruising altitude",
+"b_title": "Learjet 60 crash: What is a horizontal stabiliser, and why is it essential to flight?"
+},
+{
+"a": "https://aerospaceglobalnews.com/news/ntsb-learjet-60-broke-apart-florida-crash/",
+"b": "https://aerospaceglobalnews.com/news/learjet-60-crash-thunderstorm-risks-cruising-altitude/",
+"label": "diff",
+"a_title": "NTSB finds Learjet 60 wreckage miles from site of fatal Florida crash",
+"b_title": "Learjet 60 crash: How thunderstorms affect aircraft at cruising altitude"
+},
+{
+"a": "https://phys.org/news/2026-11-dirty-ice-young-star-beta.html",
+"b": "https://phys.org/news/2026-11-cosmic-magnifying-glass-reveal-supernova.html",
+"label": "diff",
+"a_title": "Dirty ice around young star Beta Pictoris suggests frequent collisions and sheds light on ",
+"b_title": "A cosmic magnifying glass could reveal the same supernova two more times in roughly 70 yea"
+},
+{
+"a": "https://satnews.com/2026/11/15/ast-spacemobile-details-blacklift-rocket-vision-amid-commercial-launch-crunch/",
+"b": "https://arstechnica.com/space/2026/11/building-a-rocket-is-hard-ast-spacemobile-thinks-its-simple/",
+"label": "diff",
+"a_title": "AST SpaceMobile Details Blacklift Rocket Vision Amid Commercial Launch Crunch",
+"b_title": "Building a rocket is hard. AST SpaceMobile thinks it's \"simple.\""
+},
+{
+"a": "https://www.space.com/astronomy/black-holes/this-supernova-impostor-baffled-astronomers-for-15-years-until-they-found-a-hidden-black-hole-feeding-on-an-unstable-star",
+"b": "https://www.universetoday.com/articles/the-chandra-x-ray-observatory-unmasks-a-supernova-impostor",
+"label": "same",
+"a_title": "This supernova impostor baffled astronomers for 15 years — until they found a hidden black",
+"b_title": "The Chandra X-Ray Observatory Unmasks a Supernova Impostor"
+},
+{
+"a": "https://t.me/cosmoRaccoon/20298",
+"b": "https://spacenews.com/escapade-on-its-way-to-mars-after-earth-flybys/",
+"label": "same",
+"a_title": "Межпланетные зонды ESCAPADE-A и ESCAPADE-B совершили 7 и 9 ноября соответственно успешные ",
+"b_title": "ESCAPADE on its way to Mars after Earth flybys"
+},
+{
+"a": "https://spacepolicyonline.com/news/trump-issues-american-declaration-of-freedom-in-space/",
+"b": "https://www.space.com/space-exploration/trump-declares-american-space-superiority-for-all-eternity-in-new-white-house-proclamation",
+"label": "same",
+"a_title": "Trump Issues “American Declaration of Freedom in Space”",
+"b_title": "Trump declares 'American space superiority for all eternity' in election night proclamatio"
+},
+{
+"a": "https://www.astronomy.com/observing/the-sky-today-monday-november-2-2026/",
+"b": "https://www.astronomy.com/observing/the-sky-today-sunday-november-1-2026/",
+"label": "diff",
+"a_title": "The Sky Today on Monday, November 2: The Moon passes Jupiter and Mars",
+"b_title": "The Sky Today on Sunday, November 1: The Moon in Cancer"
+},
+{
+"a": "https://phys.org/news/2026-11-euclid-3d-universe-date.html",
+"b": "https://www.theguardian.com/science/2026/nov/12/european-euclid-mission-reveals-900m-galaxies-secrets-dark-universe",
+"label": "same",
+"a_title": "Euclid offers best-ever 3D map of the universe to date",
+"b_title": "European survey reveals 900m galaxies – and possibly secrets of ‘dark universe’"
+},
+{
+"a": "https://spaceflightnow.com/2026/11/13/live-coverage-starship-flight-15-attempts-to-recover-full-vehicle-in-double-launch-pad-catch/",
+"b": "https://www.space.com/space-exploration/launches-spacecraft/relive-starships-historic-flight-15-with-our-best-photos-from-launch-and-mechazilla-tower-catch",
+"label": "same",
+"a_title": "Starship returns to Starbase and a successful tower catch",
+"b_title": "Relive Starship's historic Flight 15 with our best photos from launch and 'Mechazilla' tow"
+},
+{
+"a": "https://www.astronomy.com/observing/the-sky-today-wednesday-november-4-2026/",
+"b": "https://www.theguardian.com/science/2026/nov/02/starwatch-catch-the-striking-trifecta-of-venus-the-moon-and-spica-at-break-of-dawn",
+"label": "diff",
+"a_title": "The Sky Today on Wednesday, November 4: Venus and Spica stand close",
+"b_title": "Starwatch: Catch the striking trifecta of Venus, the moon and Spica at break of dawn"
+},
+{
+"a": "https://www.space.com/stargazing/meteor-showers/eyewitnesses-remember-the-great-leonid-meteor-storm-of-1966-it-looked-like-every-star-in-the-sky-was-falling",
+"b": "https://www.space.com/stargazing/meteor-showers/60-years-ago-the-leonid-meteor-shower-produced-144-000-meteors-per-hour-could-it-happen-again",
+"label": "related",
+"a_title": "'It looked like every star in the sky was falling': Eyewitnesses remember the great Leonid",
+"b_title": "60 years ago the Leonid meteor shower produced 144,000 meteors per hour. Could it happen a"
+},
+{
+"a": "https://www.latimes.com/california/story/2026-11-17/pediatrician-congress-california-vaccine-laws-medicaid",
+"b": "https://www.latimes.com/science/story/2026-11-17/nasas-voyager-1-to-reach-record-breaking-light-day-distance-from-earth",
+"label": "diff",
+"a_title": "Richard Pan shaped California's strict vaccine laws. Now he takes on new battles in Congre",
+"b_title": "NASA's Voyager 1 will soon be so far away that its messages take a day to reach Earth"
+},
+{
+"a": "https://www.space.com/space-exploration/launches-spacecraft/spacex-starship-flight-15-1st-booster-ship-double-catch-full-recovery-what-time",
+"b": "https://t.me/cosmoRaccoon/20294",
+"label": "diff",
+"a_title": "What time will SpaceX launch Starship Flight 15, its 1st double landing test, today? (Full",
+"b_title": "SpaceX доставила ускоритель Super Heavy Booster 22 на площадку Starbase перед испытательны"
+},
+{
+"a": "https://t.me/rscc_rscc/19543",
+"b": "https://t.me/rscc_rscc/19539",
+"label": "diff",
+"a_title": "ФГУП \"Космическая связь\" планирует запустить в 2029-2030 годах восемь новых спутников связ",
+"b_title": "Система высокоточного позиционирования сельхозтехники, в которой \"Космическая связь\" с исп"
+},
+{
+"a": "https://www.space.com/space-exploration/launches-spacecraft/spacex-chopsticks-catch-starship-upper-stage-flight-14",
+"b": "https://spaceq.ca/starship-flight-15-catch-both-stages-preview/",
+"label": "diff",
+"a_title": "'Now everything changes': SpaceX catches Starship upper stage for 1st time ever (video)",
+"b_title": "Starship Flight 15 to attempt first catch of both stages"
+}
+]
+}

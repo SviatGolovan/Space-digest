@@ -3,7 +3,9 @@
    ============================================================ */
 const $ = id => document.getElementById(id);
 const esc = escHtml;
-let MODE = 'since_last';
+const PROFILE = window.PROFILE || 'space';          // space — общий дайджест, slk — РН сверхлёгкого класса
+const SLK = PROFILE === 'slk';
+let MODE = SLK ? 'window' : 'since_last';
 let CURRENT = null;          // последняя подготовленная выгрузка {id, prompt, ...}
 
 function params(){
@@ -11,7 +13,7 @@ function params(){
   if($('k-rss').checked) kinds.push('rss');
   if($('k-tg').checked) kinds.push('telegram');
   return {mode: MODE, date_from: $('date-from').value, date_to: $('date-to').value,
-          kinds, dedupe: $('dedupe').checked};
+          kinds, dedupe: $('dedupe').checked, profile: PROFILE};
 }
 async function postJ(url, body){
   const r = await fetch(url, {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(body||{})});
@@ -36,9 +38,17 @@ async function loadPreview(){
   if(!d.ok){ $('mode-hint').innerHTML = '<span style="color:var(--amber)">'+esc(d.error||'')+'</span>'; return; }
   $('st-total').textContent = d.total - (d.filtered || 0);
   $('st-rss').textContent = d.by_kind.rss; $('st-tg').textContent = d.by_kind.telegram;
-  $('cnt-rss').textContent = d.by_kind.rss + ' новых'; $('cnt-tg').textContent = d.by_kind.telegram + ' новых';
+  const word = SLK ? ' за период' : ' новых';
+  $('cnt-rss').textContent = d.by_kind.rss + word; $('cnt-tg').textContent = d.by_kind.telegram + word;
   $('st-period').textContent = fmtPeriod(d.period_from, d.period_to);
-  if(d.mode === 'since_last'){
+  if(d.window){
+    const w = d.window, nf = new Date(w.new_from); nf.setDate(nf.getDate() - 1);
+    $('st-period').textContent = fmtPeriod(w.date_from, w.date_to);
+    $('mode-hint').innerHTML = `Новые дни: <b>${fmtPeriod(w.new_from, w.date_to)}</b> (${w.period_days} дн.)` +
+      (w.overlap_days ? ` + перекрытие с прошлым поиском <b>${fmtPeriod(w.date_from, nf.toISOString().slice(0,10))}</b> (${w.overlap_days} дн.). ` +
+        'Что уже было в прошлом дайджесте, придёт с отметкой.' : '.');
+    $('mode-window').textContent = `${w.period_days} + ${w.overlap_days} дн.`;
+  } else if(d.mode === 'since_last'){
     $('mode-hint').innerHTML = d.fallback
       ? 'Выгрузок ещё не было — берём новости за вчера и сегодня.'
       : 'Всё, что собрано после выгрузки <b>' + fmtDT(d.since) + '</b>. Ничего не пропадёт и не повторится.';
@@ -46,12 +56,14 @@ async function loadPreview(){
     $('mode-hint').textContent = 'Новости, опубликованные в выбранные даты (включительно).';
   }
   $('btn-prepare').disabled = !d.total;
-  $('list-note').textContent = [d.filtered ? `фильтр мусора отсеет ${d.filtered}` : '',
+  $('list-note').textContent = [d.filtered ? `${SLK ? 'предфильтр' : 'фильтр мусора'} отсеет ${d.filtered}` : '',
+    d.undated ? `без даты на сайте: ${d.undated} — ChatGPT проверит дату поиском` : '',
     d.total > d.sample.length ? `показаны первые ${d.sample.length} из ${d.total}` : ''].filter(Boolean).join(' · ');
   $('preview-body').innerHTML = d.sample.length ? d.sample.map(n => `
     <tr${n.filtered ? ' class="pv-off"' : ''}><td class="ex-time">${esc(n.published)}</td>
       <td class="ex-src"><span class="ex-kind ${n.kind}">${n.kind==='telegram'?'TG':'Сайт'}</span> ${esc(n.source)}</td>
       <td>${n.url ? `<a href="${esc(n.url)}" target="_blank" class="ex-title">${esc(n.title)}</a>` : esc(n.title)}${
+        n.undated ? '<span class="rv-badge warn" title="У новости на сайте нет даты. Показан день, когда программа её впервые увидела">дата не подтверждена</span>' : ''}${
         n.filtered ? `<span class="rv-reason">отсеется: ${esc(n.filtered)}</span>` : ''}</td></tr>`).join('')
     : `<tr><td><div class="empty"><div class="empty-icon">📭</div><div class="empty-title">Новых новостей нет</div>
        <div class="empty-sub">Нажмите «Собрать сейчас» или выберите режим «За даты».</div></div></td></tr>`;
@@ -168,6 +180,10 @@ const RV_NOTES = {
   excluded: 'Убранные строки не попадут в CSV и не считаются «уже выгруженными».',
   filtered: 'Отсеяно фильтром мусора (Настройки → Фильтр мусора). Ошибся — верните новость в CSV.',
 };
+if(SLK){
+  RV_NOTES.rows = 'Правки сразу сохраняются в CSV. «Было в дайджесте» и «дата не подтверждена» ChatGPT разберёт по промпту.';
+  RV_NOTES.filtered = 'Отсеяно предфильтром СЛК (Настройки → СЛК) или фильтром мусора. Ошибся — верните новость в CSV.';
+}
 function setTab(){
   document.querySelectorAll('#rv-tabs button').forEach(x => x.classList.toggle('on', x.dataset.v === RV_TAB));
 }
@@ -189,7 +205,7 @@ function sgDismiss(key){
 }
 let SUGG = null;
 async function loadSuggest(){
-  if(!CURRENT) return;
+  if(!CURRENT || SLK) return;
   let d; try{ d = await (await fetch('/api/filter/suggest?export_id=' + CURRENT.id)).json(); }catch(e){ return; }
   if(!d.ok) return;
   const off = new Set(sgDismissed());
@@ -220,7 +236,7 @@ async function sgStop(word){
 function storyRows(s, open){
   const more = s.others.length ? `<span class="rv-more" onclick="rvToggle(${s.id})">${open ? '▾' : '▸'} ещё ${s.others.length} ${plural(s.others.length, 'источник', 'источника', 'источников')}</span>` : '';
   let html = `<tr${s.off ? ' class="rv-off"' : ''}><td class="rv-n">${s.n || ''}</td><td class="ex-time">${esc(s.published)}</td>
-    <td class="ex-src">${kindTag(s.kind)} ${esc(s.source)}</td><td>${titleLink(s)}${more}</td>
+    <td class="ex-src">${kindTag(s.kind)} ${esc(s.source)}</td><td>${titleLink(s)}${badges(s)}${more}</td>
     <td class="rv-act">${s.off ? actBtn(s.id, 'include', 'Вернуть') : actBtn(s.id, 'exclude', 'Убрать')}</td></tr>`;
   if(open) html += s.others.map(o => `<tr class="rv-sub"><td></td><td class="ex-time">${esc(o.published)}</td>
     <td class="ex-src">${kindTag(o.kind)} ${esc(o.source)}</td>
@@ -228,6 +244,13 @@ function storyRows(s, open){
         ? `<b>+${o.added} симв. новых фактов</b>` : 'новых фактов нет — только ссылка'}</span></td>
     <td class="rv-act">${s.off ? '' : actBtn(o.id, 'separate', 'Отдельной строкой')}</td></tr>`).join('');
   return html;
+}
+function badges(s){
+  let b = '';
+  if(s.undated) b += '<span class="rv-badge warn" title="У новости на сайте нет даты — ChatGPT проверит её поиском">дата не подтверждена</span>';
+  else if(s.date_check) b += `<span class="rv-badge" title="Как определена дата">дата ${esc(s.date_check)}</span>`;
+  if(s.note) b += `<span class="rv-badge info" title="${esc(s.note)}">было в дайджесте</span>`;
+  return b;
 }
 function paintReview(){
   const d = REVIEW; if(!d) return;
@@ -335,7 +358,7 @@ async function collectDocx(){
 
 /* ── история ───────────────────────────────────────────── */
 async function loadHistory(){
-  const list = await (await fetch('/api/export/list')).json();
+  const list = await (await fetch('/api/export/list?profile=' + PROFILE)).json();
   $('history-body').innerHTML = list.length ? list.map(e => `
     <tr class="ex-hist" onclick="showExport(${e.id}, false)">
       <td class="ex-time">${fmtDT(e.created_at)}</td>
@@ -352,12 +375,13 @@ async function loadHistory(){
   const today = new Date(); const y = new Date(Date.now() - 864e5);
   const iso = d => d.toISOString().slice(0,10);
   $('date-from').value = iso(y); $('date-to').value = iso(today);
-  try{ const p = await Prefs.get(); if(p.export) $('dedupe').checked = !!p.export.dedup; }catch(e){}
+  try{ const p = await Prefs.get(), sec = SLK ? p.slk : p.export; if(sec) $('dedupe').checked = sec.dedup !== false; }catch(e){}
   loadPreview(); loadCollect(); loadHistory();
   setInterval(loadCollect, 30000);
   // Открыть выгрузку по ссылке (?open=ID — с обзора) или свежую утреннюю, если DOCX к ней ещё нет
   const want = +new URLSearchParams(location.search).get('open');
   if(want) return showExport(want, false);
+  if(SLK) return;                                    // утренняя выгрузка — только общая
   try{
     const m = await (await fetch('/api/morning/status')).json();
     const last = m.last;

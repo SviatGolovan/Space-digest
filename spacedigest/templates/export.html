@@ -2,19 +2,28 @@
 <!DOCTYPE html>
 <html lang="ru" class="{{ 'fx' if fx_on }}" data-theme="{{ 'light' if theme == 'system' else theme }}" data-theme-pref="{{ theme }}">
 <head>
-{{ L.head("Выгрузка") }}
+{{ L.head("Дайджест СЛК" if profile == "slk" else "Выгрузка") }}
+<script>window.PROFILE = {{ profile|tojson }};</script>
 </head>
 <body>
 <div class="layout">
-{{ L.header("export", "📤") }}
+{{ L.header("slk" if profile == "slk" else "export", "📤") }}
 
   <aside class="sidebar">
     <div class="card">
+      {% if profile == "slk" %}
+      <div class="card-title">Дайджест по РН сверхлёгкого класса</div>
+      <div class="seg" id="mode" style="width:100%">
+        <button data-v="window" class="on" style="flex:1.6" id="mode-window">Новые + перекрытие</button>
+        <button data-v="dates" style="flex:1">За даты</button>
+      </div>
+      {% else %}
       <div class="card-title">Что выгружаем</div>
       <div class="seg" id="mode" style="width:100%">
         <button data-v="since_last" class="on" style="flex:1.6">С прошлой выгрузки</button>
         <button data-v="dates" style="flex:1">За даты</button>
       </div>
+      {% endif %}
       <div class="date-row" id="dates-row" style="display:none;margin-top:10px">
         <label class="field">С <input type="date" id="date-from"></label>
         <label class="field">По <input type="date" id="date-to"></label>
@@ -28,8 +37,13 @@
         <label class="switch"><input type="checkbox" id="k-rss" checked><span class="slider"></span></label></label>
       <label class="toggle-row"><div class="toggle-label">Telegram <small id="cnt-tg">—</small></div>
         <label class="switch"><input type="checkbox" id="k-tg" checked><span class="slider"></span></label></label>
+      {% if profile == "slk" %}
+      <label class="toggle-row"><div class="toggle-label">Сводить версии события
+          <small>в одну строку; бывшее в прошлом дайджесте — с отметкой</small></div>
+      {% else %}
       <label class="toggle-row"><div class="toggle-label">Убрать повторы
           <small>и то, что уже было в выгрузках</small></div>
+      {% endif %}
         <label class="switch"><input type="checkbox" id="dedupe" checked><span class="slider"></span></label></label>
     </div>
 
@@ -39,6 +53,11 @@
       <button class="btn-secondary" id="btn-collect" onclick="collectNow()">Собрать сейчас</button>
     </div>
 
+    {% if profile == "slk" %}
+    <div class="set-note slk-note">Источники СЛК (сайты компаний, РБК, КП…) и все ваши сайты и каналы.
+      Мягкий предфильтр убирает только явно не про ракеты — отбор по теме делает ChatGPT.
+      <a href="/settings#slk">Настройки СЛК</a></div>
+    {% endif %}
     <button class="btn-fetch" id="btn-prepare" onclick="prepare()">{{ L.icon('welcome') }} Подготовить для ChatGPT</button>
   </aside>
 
@@ -85,7 +104,7 @@
         <div class="seg rv-tabs" id="rv-tabs">
           <button data-v="rows" class="on">Строки CSV <span class="rv-c" id="rv-c-rows"></span></button>
           <button data-v="multi">Сюжеты <span class="rv-c" id="rv-c-multi"></span></button>
-          <button data-v="known">Уже было <span class="rv-c" id="rv-c-known"></span></button>
+          <button data-v="known"{% if profile == "slk" %} style="display:none"{% endif %}>Уже было <span class="rv-c" id="rv-c-known"></span></button>
           <button data-v="filtered">Отфильтровано <span class="rv-c" id="rv-c-filtered"></span></button>
           <button data-v="excluded">Убрано <span class="rv-c" id="rv-c-excluded"></span></button>
         </div>

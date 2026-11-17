@@ -202,9 +202,12 @@ SOURCES = [
         "type": "rss", "category": "Международные", "region": "Китай", "enabled": True,
     },
     {
-        "id": "scmp_space", "name": "South China Morning Post – Space",
-        "url": "https://www.scmp.com/rss/91/feed",
+        # Раньше здесь стояла rss/91 — общая лента издания (политика, Гонконг, бизнес): до 50 новостей
+        # в день не про космос. Лента научного раздела + «только про космос».
+        "id": "scmp_space", "name": "South China Morning Post – Science",
+        "url": "https://www.scmp.com/rss/328475/feed",
         "type": "rss", "category": "Международные", "region": "Гонконг", "enabled": True,
+        "space_only": True,
     },
     {
         "id": "aerospaceglobalnews", "name": "Aerospace Global News",

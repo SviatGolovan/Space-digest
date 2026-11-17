@@ -110,11 +110,11 @@
     };
     cells.forEach((r, i) => { move(r); setTimeout(() => r.classList.add('on'), i * 180); });
     setInterval(() => {
-      if(document.hidden) return;
+      if(document.hidden || root.classList.contains('fx-idle')) return;
       const r = cells[Math.floor(Math.random() * cells.length)];
       r.classList.remove('on');
       setTimeout(() => { move(r); r.classList.add('on'); }, 1700);
-    }, 450);
+    }, 1400);
     return svg;
   }
 
@@ -161,7 +161,10 @@
         } else if(c.__on){ c.style.setProperty('--fx-o', '0'); c.__on = false; }
       }
     };
-    document.addEventListener('pointermove', e => { pending = e; if(!raf) raf = requestAnimationFrame(frame); }, {passive:true});
+    document.addEventListener('pointermove', e => {
+      if(root.classList.contains('fx-idle')) return;
+      pending = e; if(!raf) raf = requestAnimationFrame(frame);
+    }, {passive:true});
     document.addEventListener('pointerleave', () => { cards.forEach(c => { c.style.setProperty('--fx-o', '0'); c.__on = false; }); });
     let t = 0;
     new MutationObserver(() => { clearTimeout(t); t = setTimeout(collectCards, 300); })
@@ -412,7 +415,31 @@
     ring.className = 'fx-beam-ring'; steps.appendChild(ring);
   }
 
+  /* ── Пауза, когда окно не в фокусе ──
+     Все окна программы (и ChatGPT) рисует один графический процесс WebView2: если главное
+     окно продолжает анимации, пока вы работаете в ChatGPT, тормозит именно ChatGPT. */
+  function initIdle(){
+    let paused = [];
+    const apply = () => {
+      const idle = document.hidden || !document.hasFocus();
+      if(idle === root.classList.contains('fx-idle')) return;
+      root.classList.toggle('fx-idle', idle);
+      if(!document.getAnimations) return;
+      if(idle){
+        paused = document.getAnimations().filter(a => a.playState === 'running');
+        paused.forEach(a => { try{ a.pause(); }catch(e){} });
+      } else {
+        paused.forEach(a => { try{ if(a.playState === 'paused') a.play(); }catch(e){} });
+        paused = [];
+      }
+    };
+    addEventListener('blur', apply); addEventListener('focus', apply);
+    document.addEventListener('visibilitychange', apply);
+    setTimeout(apply, 300);
+  }
+
   function init(){
+    initIdle();
     initUpdateDot();
     initFlow();
     iconEmpty();

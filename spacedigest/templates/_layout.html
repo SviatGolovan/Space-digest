@@ -18,6 +18,7 @@
 {% macro icon(name) -%}
 <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
 {%- if name == 'export' -%}<path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/><path d="M7 9l5-5 5 5"/><path d="M12 4v12"/>
+{%- elif name == 'rocket' -%}<path d="M4 13a8 8 0 0 1 7 7a6 6 0 0 0 3-5a9 9 0 0 0 6-8a3 3 0 0 0-3-3a9 9 0 0 0-8 6a6 6 0 0 0-5 3"/><path d="M7 14a6 6 0 0 0-3 6a6 6 0 0 0 6-3"/><path d="M14 9a1 1 0 1 0 2 0a1 1 0 1 0-2 0"/>
 {%- elif name == 'sites' -%}<path d="M3 12a9 9 0 1 0 18 0a9 9 0 1 0-18 0"/><path d="M3.6 9h16.8M3.6 15h16.8"/><path d="M11.5 3a17 17 0 0 0 0 18M12.5 3a17 17 0 0 1 0 18"/>
 {%- elif name == 'tg' -%}<path d="M15 10l-4 4 6 6 4-16-18 7 4 2 2 6 3-4"/>
 {%- elif name == 'dedup' -%}<path d="M8 8m0 2a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2h-8a2 2 0 0 1-2-2z"/><path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2"/>
@@ -57,6 +58,7 @@
     <nav class="tabbar" data-fx-pill>
       <a href="/home" class="tab-link {{ 'active' if active=='home' }}">{{ icon('home') }}<span>Обзор</span></a>
       <a href="/export" class="tab-link {{ 'active' if active=='export' }}">{{ icon('export') }}<span>Выгрузка</span></a>
+      <a href="/slk" class="tab-link {{ 'active' if active=='slk' }}" title="Дайджест по РН сверхлёгкого класса">{{ icon('rocket') }}<span>СЛК</span></a>
       <a href="/" class="tab-link {{ 'active' if active=='sites' }}">{{ icon('sites') }}<span>Сайты</span></a>
       <a href="/tg" class="tab-link {{ 'active' if active=='tg' }}">{{ icon('tg') }}<span>Telegram</span></a>
       <a href="/dedup" class="tab-link {{ 'active' if active=='dedup' }}">{{ icon('dedup') }}<span>Дедупликатор</span></a>

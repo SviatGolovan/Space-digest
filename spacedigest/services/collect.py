@@ -73,9 +73,12 @@ class Collector:
             self.repo.record_success(src.id, res.state, 0)
             ctx.log(f"= {src.name}: лента не менялась")
             return {"source": src.key, "new": 0, "not_modified": True}
-        stats = ingest(self.repo.db, src, res.items)
+        first_run = self.repo.db.scalar("SELECT last_ok_at FROM source_state WHERE source_id = ?",
+                                        (src.id,)) is None
+        stats = ingest(self.repo.db, src, res.items, first_run=first_run)
         self.repo.record_success(src.id, res.state, stats.new)
-        if stats.new and src.kind == "rss" and self.fulltext is not None and self.fulltext.cfg()[0]:
+        if stats.new and src.kind == "rss" and self.fulltext is not None and \
+                (self.fulltext.cfg()[0] or src.config.get("html")):
             self.queue.enqueue("fulltext", {"source_id": src.id}, dedupe_key=f"fulltext:{src.id}", max_attempts=1)
         ctx.log(f"✓ {src.name}: новых {stats.new}, обновлено {stats.updated}, "
                 f"без изменений {stats.unchanged}")
@@ -87,14 +90,14 @@ def job_fulltext(fulltext, ctx: JobContext) -> dict:
     """Дотянуть полный текст: {source_id} — новые статьи источника; {days} — догрузка за N дней."""
     sid = ctx.payload.get("source_id")
     days = int(ctx.payload.get("days") or 3)
-    total = {"ok": 0, "same": 0, "failed": 0}
+    total = {"ok": 0, "same": 0, "failed": 0, "dated": 0}
     while True:
         rows = fulltext.pending(int(sid) if sid else None, days=days)
         if not rows:
             break
         res = fulltext.process(rows, log=ctx.log)
         for k in total:
-            total[k] += res[k]
+            total[k] += res.get(k, 0)
         if sid:                       # для одного источника — одна порция за запуск
             break
         ctx.progress(min(95, (total["ok"] + total["same"] + total["failed"]) // 5))

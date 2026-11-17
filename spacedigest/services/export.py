@@ -13,6 +13,8 @@
 """
 from __future__ import annotations
 
+import os
+
 import csv
 import io
 import shutil
@@ -33,6 +35,12 @@ LogFn = Optional[Callable[[str], None]]
 PERIOD_VAR = "{{ПЕРИОД}}"
 CSV_COLUMNS = ["ID", "Дата публикации", "Источник", "Тип источника", "Заголовок",
                "Полный текст", "Ссылка", "Другие источники"]
+# СЛК: плюс проверка даты и отметка о повторе из прошлого дайджеста
+SLK_COLUMNS = ["ID", "Дата публикации", "Дата проверена", "Источник", "Тип источника", "Заголовок",
+               "Полный текст", "Ссылка", "Другие источники", "Было в прошлом дайджесте"]
+DATE_LABEL = {None: "по ленте", "": "по ленте", "page": "по странице статьи",
+              "card": "по карточке на сайте"}
+PROFILES = ("space", "slk")
 STATES = ("main", "merged", "known", "excluded", "filtered")
 # Для «уже было в прошлой выгрузке» порог строже: такая новость в CSV не попадает совсем,
 # а версия внутри сюжета лишь дописывает факты в основную строку.
@@ -40,8 +48,19 @@ KNOWN_MARGIN = 0.04
 KIND_LABEL = {"rss": "Сайт", "telegram": "Telegram", "file": "Файл"}
 
 
-def default_prompt() -> str:
-    return (resource_dir() / "prompts" / "digest_default.txt").read_text(encoding="utf-8")
+def default_prompt(profile: str = "space") -> str:
+    name = "slk_default.txt" if profile == "slk" else "digest_default.txt"
+    return (resource_dir() / "prompts" / name).read_text(encoding="utf-8")
+
+
+def date_check_label(r: dict) -> str:
+    """Как определена дата новости — для колонки «Дата проверена» и для экрана проверки."""
+    st = r.get("date_status")
+    if st in ("none", "baseline"):
+        seen = local_dt(r.get("fetched_at") or r.get("published_at"))
+        return ("НЕ ПОДТВЕРЖДЕНА — у новости на сайте нет даты; впервые замечена "
+                + (seen.strftime("%d.%m.%Y") if seen else "недавно"))
+    return DATE_LABEL.get(st, "по ленте")
 
 
 def local_dt(iso: Optional[str]) -> Optional[datetime]:
@@ -67,12 +86,23 @@ def full_text(row: dict) -> str:
 
 
 class ExportService:
+    """profile = space — общий дайджест (раздел настроек «export»);
+    profile = slk — дайджест по РН сверхлёгкого класса (раздел «slk»): своё окно дат с
+    перекрытием, свой предфильтр, свой промпт и своя история выгрузок в той же базе."""
+
     def __init__(self, db: Database, settings, deduper: Optional[Callable] = None,
                  downloads_dir: Optional[Path] = None, export_root: Optional[Path] = None,
-                 vectors: Optional[VectorCache] = None):
+                 vectors: Optional[VectorCache] = None, profile: str = "space"):
+        assert profile in PROFILES, profile
         self.db = db
+        self.profile = profile
+        self.section = "slk" if profile == "slk" else "export"
         self.vectors = vectors or VectorCache(db)
-        self.filter = ContentFilter(db, settings)
+        if profile == "slk":
+            from .slk import SlkFilter
+            self.filter = SlkFilter(db, settings)
+        else:
+            self.filter = ContentFilter(db, settings)
         self.settings = settings
         self._deduper = deduper
         self.downloads_dir = Path(downloads_dir) if downloads_dir else Path.home() / "Downloads"
@@ -80,7 +110,11 @@ class ExportService:
 
     # ─── настройки ───────────────────────────────────────────────────────────
     def cfg(self, key: str, default=None):
-        return self.settings.get("export", key, default)
+        return self.settings.get(self.section, key, default)
+
+    @property
+    def slk(self) -> bool:
+        return self.profile == "slk"
 
     def export_root(self) -> Path:
         if self._export_root:
@@ -89,18 +123,36 @@ class ExportService:
         if custom:
             return Path(custom).expanduser()
         docs = Path.home() / "Documents"
-        return (docs if docs.exists() else Path.home()) / "Space Digest" / "Выгрузки"
+        return (docs if docs.exists() else Path.home()) / "Space Digest" / \
+            ("Выгрузки СЛК" if self.slk else "Выгрузки")
 
     def prompt_template(self) -> str:
-        return (self.cfg("prompt") or "").strip() or default_prompt()
+        return (self.cfg("prompt") or "").strip() or default_prompt(self.profile)
 
-    def render_prompt(self, period_from: str, period_to: str) -> str:
+    def window(self, today: Optional[str] = None) -> dict:
+        """СЛК: новые N дней + M дней перекрытия с прошлым поиском (по умолчанию 14 + 7)."""
+        period = max(1, int(self.cfg("period_days", 14) or 14))
+        overlap = max(0, int(self.cfg("overlap_days", 7) or 0))
+        end = datetime.strptime(today, "%Y-%m-%d").date() if today else datetime.now().astimezone().date()
+        new_from = end - timedelta(days=period - 1)
+        start = new_from - timedelta(days=overlap)
+        return {"date_from": start.isoformat(), "date_to": end.isoformat(),
+                "new_from": new_from.isoformat(), "period_days": period, "overlap_days": overlap}
+
+    def render_prompt(self, period_from: str, period_to: str, new_from: str = "") -> str:
         period = period_from if period_from == period_to else f"{period_from} - {period_to}"
-        return self.prompt_template().replace(PERIOD_VAR, period)
+        text = self.prompt_template().replace(PERIOD_VAR, period)
+        if self.slk:
+            nf = new_from or period_from
+            overlap_to = (datetime.strptime(nf, "%Y-%m-%d").date() - timedelta(days=1)).isoformat()
+            text = (text.replace("{{НОВЫЙ_ПЕРИОД}}", f"{nf} - {period_to}")
+                        .replace("{{ПЕРЕКРЫТИЕ}}", "нет" if nf <= period_from else f"{period_from} - {overlap_to}"))
+        return text
 
     # ─── отбор ───────────────────────────────────────────────────────────────
     def last(self) -> Optional[dict]:
-        return self.db.one("SELECT * FROM exports ORDER BY id DESC LIMIT 1")
+        return self.db.one("SELECT * FROM exports WHERE profile = ? ORDER BY id DESC LIMIT 1",
+                           (self.profile,))
 
     def select(self, mode: str = "since_last", date_from: str = "", date_to: str = "",
                kinds: tuple[str, ...] = ("rss", "telegram"),
@@ -108,8 +160,14 @@ class ExportService:
         until = until or now_iso()
         kinds = tuple(k for k in kinds if k in KIND_LABEL) or ("rss", "telegram")
         info: dict = {"mode": mode, "until": until}
-        where = [f"s.kind IN ({','.join('?' * len(kinds))})", "i.fetched_at <= ?"]
-        params: list = [*kinds, until]
+        # Архив сайта, собранный при первом заходе (дата неизвестна), в выгрузки не идёт
+        where = [f"s.kind IN ({','.join('?' * len(kinds))})", "i.fetched_at <= ?",
+                 "s.scope IN ('all', ?)", "COALESCE(i.date_status, '') <> 'baseline'"]
+        params: list = [*kinds, until, self.profile]
+        if self.slk and mode in ("window", "since_last"):
+            w = self.window()
+            mode, date_from, date_to = "dates", w["date_from"], w["date_to"]
+            info.update(window=w)
         last = self.last() if mode == "since_last" else None
         if mode == "since_last" and last:
             where += ["i.fetched_at > ?", "i.origin = 'collect'"]
@@ -128,7 +186,7 @@ class ExportService:
             info.update(date_from=date_from, date_to=date_to)
         rows = self.db.query(f"""
             SELECT i.id, i.source_id, i.title, i.summary, i.body, i.url, i.published_at, i.fetched_at,
-                   s.name AS source_name, s.kind AS kind, s.key AS source_key
+                   i.date_status, s.name AS source_name, s.kind AS kind, s.key AS source_key
             FROM items i JOIN sources s ON s.id = i.source_id
             WHERE {' AND '.join(where)}
             ORDER BY i.published_at DESC, i.id DESC
@@ -153,7 +211,9 @@ class ExportService:
             "sample": [{"title": r["title"], "source": r["source_name"], "kind": r["kind"],
                         "published": local_dt(r["published_at"]).strftime("%d.%m %H:%M")
                         if r["published_at"] else "", "url": r["url"],
+                        "undated": r.get("date_status") == "none",
                         "filtered": dropped.get(r["id"])} for r in rows[:300]],
+            "undated": sum(1 for r in rows if r.get("date_status") == "none"),
             "last_export": self.last(),
         }
 
@@ -166,8 +226,8 @@ class ExportService:
                    s.name AS source_name, s.kind AS kind
             FROM export_items ei JOIN exports e ON e.id = ei.export_id
             JOIN items i ON i.id = ei.item_id JOIN sources s ON s.id = i.source_id
-            WHERE ei.state IN ('main', 'merged') AND e.created_at >= ?
-        """, (iso_after(minutes=-days * 1440),))
+            WHERE ei.state IN ('main', 'merged') AND e.created_at >= ? AND e.profile = ?
+        """, (iso_after(minutes=-days * 1440), self.profile))
         return [r for r in rows if r["id"] not in exclude]
 
     @staticmethod
@@ -184,7 +244,7 @@ class ExportService:
         if dedup is None:
             from ..deduplicator import run_deduplication as dedup
         ids = {r["id"] for r in rows}
-        days = int(self.cfg("reference_days", 7) or 0)
+        days = int(self.cfg("reference_days", 30 if self.slk else 7) or 0)
         ref = self.reference_rows(days, ids)
         if len(rows) < 2 and not ref:
             return {}
@@ -212,8 +272,8 @@ class ExportService:
     def _export_rows(self, export_id: int) -> list[dict]:
         rows = self.db.query("""
             SELECT ei.item_id AS id, ei.state, ei.duplicate_of, ei.similarity, ei.row_no, ei.reason,
-                   i.source_id, i.title, i.summary, i.body, i.url, i.published_at,
-                   s.name AS source_name, s.kind AS kind
+                   ei.note, i.source_id, i.title, i.summary, i.body, i.url, i.published_at,
+                   i.fetched_at, i.date_status, s.name AS source_name, s.kind AS kind
             FROM export_items ei JOIN items i ON i.id = ei.item_id JOIN sources s ON s.id = i.source_id
             WHERE ei.export_id = ?
         """, (export_id,))
@@ -240,7 +300,7 @@ class ExportService:
         children = self._children(rows)
         out = io.StringIO()
         w = csv.writer(out, quoting=csv.QUOTE_ALL, lineterminator="\r\n")
-        w.writerow(CSV_COLUMNS)
+        w.writerow(SLK_COLUMNS if self.slk else CSV_COLUMNS)
         n = 0
         for r in rows:
             if r["state"] != "main":
@@ -249,9 +309,17 @@ class ExportService:
             others = children.get(r["id"], [])
             text, _ = self.story(r, others)
             d = local_dt(r["published_at"])
-            w.writerow([n, d.strftime("%Y-%m-%d %H:%M") if d else "", r["source_name"],
-                        KIND_LABEL.get(r["kind"], r["kind"]), fix_mojibake(r["title"]), text, r["url"],
-                        "\n".join(f"{o['source_name']}: {o['url']}" for o in others)])
+            date = d.strftime("%Y-%m-%d %H:%M") if d else ""
+            if r.get("date_status") in ("page", "card", "none"):
+                date = date[:10]                          # время у таких дат не имеет смысла
+            other = "\n".join(f"{o['source_name']}: {o['url']}" for o in others)
+            if self.slk:
+                w.writerow([n, date, date_check_label(r), r["source_name"],
+                            KIND_LABEL.get(r["kind"], r["kind"]), fix_mojibake(r["title"]), text, r["url"],
+                            other, r.get("note") or ""])
+            else:
+                w.writerow([n, date, r["source_name"], KIND_LABEL.get(r["kind"], r["kind"]),
+                            fix_mojibake(r["title"]), text, r["url"], other])
         return "\ufeff" + out.getvalue()                  # BOM — корректно открывается в Excel
 
     def write_csv(self, export_id: int) -> dict:
@@ -286,13 +354,26 @@ class ExportService:
             log(f"Отобрано новостей: {len(rows)} (сайты {sum(r['kind'] != 'telegram' for r in rows)}, "
                 f"Telegram {sum(r['kind'] == 'telegram' for r in rows)})")
         passed, dropped = self.filter.split(rows)
+        fname, fwhere = (("Предфильтр СЛК", "Настройки → Дайджест СЛК") if self.slk
+                         else ("Фильтр мусора", "Настройки → Фильтр мусора"))
         if log and dropped:
-            log(f"Фильтр мусора отсеял: {len(dropped)} (вернуть можно во вкладке «Отфильтровано»)")
+            log(f"{fname} отсеял: {len(dropped)} (вернуть можно во вкладке «Отфильтровано»)")
         if not passed:
-            raise ValueError("все отобранные новости отсеяны фильтром мусора (Настройки → Фильтр мусора)")
+            raise ValueError(f"все отобранные новости отсеяны: {fname.lower()} ({fwhere})")
         roles: dict[int, tuple[str, Optional[int], Optional[float]]] = {}
         if self.cfg("dedup", True) if dedupe is None else dedupe:
             roles = self.dedupe(passed, log)
+        notes: dict[int, str] = {}
+        if self.slk:
+            # СЛК: окно дат перекрывается с прошлым поиском, поэтому повторы ожидаемы. Они не
+            # выбрасываются, а идут в CSV с отметкой — решает ChatGPT (есть ли новый факт).
+            notes = self.previous_notes([r["id"] for r in passed])
+            for iid, (state, canon, sim) in list(roles.items()):
+                if state == "known":
+                    prev = self.previous_notes([canon]).get(canon) if canon else None
+                    notes.setdefault(iid, (prev or "похожая новость была в прошлом дайджесте")
+                                     + " (тот же сюжет из другого источника)")
+                    del roles[iid]
         kept = [r for r in passed if r["id"] not in roles]
         if not kept:
             raise ValueError("все отобранные новости уже были в прошлых выгрузках")
@@ -300,8 +381,18 @@ class ExportService:
             merged = sum(1 for v in roles.values() if v[0] == "merged")
             log(f"Сюжетов из нескольких источников: {len({v[1] for v in roles.values() if v[0] == 'merged'})} "
                 f"(сведено версий: {merged}); уже было в прошлых выгрузках: {len(roles) - merged}")
+        if log and notes:
+            log(f"Было в прошлых дайджестах СЛК: {len(notes)} — остаются в CSV с отметкой")
+        undated = sum(1 for r in kept if r.get("date_status") == "none")
+        if log and undated:
+            log(f"Без даты на сайте: {undated} — в CSV с пометкой «НЕ ПОДТВЕРЖДЕНА», ChatGPT проверит поиском")
         dates = [d for d in (local_dt(r["published_at"]) for r in kept) if d]
         p_from, p_to = min(dates).date().isoformat(), max(dates).date().isoformat()
+        win = info.get("window")
+        if win:
+            p_from, p_to = win["date_from"], win["date_to"]
+        elif self.slk and info.get("date_from"):
+            p_from, p_to = info["date_from"], info["date_to"]
 
         stamp = datetime.now().strftime("%Y-%m-%d_%H%M")
         folder = self.export_root() / stamp
@@ -309,31 +400,50 @@ class ExportService:
         while folder.exists():
             folder = self.export_root() / f"{stamp}_{n}"; n += 1
         folder.mkdir(parents=True)
-        base = f"news_{p_from}" if p_from == p_to else f"news_{p_from}_{p_to}"
+        stem = "slk_news" if self.slk else "news"
+        base = f"{stem}_{p_from}" if p_from == p_to else f"{stem}_{p_from}_{p_to}"
         csv_path = folder / f"{base}.csv"
-        prompt = self.render_prompt(p_from, p_to)
+        prompt = self.render_prompt(p_from, p_to, (win or {}).get("new_from", ""))
         prompt_path = folder / "prompt.txt"
         prompt_path.write_text(prompt, encoding="utf-8")
 
         with self.db.tx():
             cur = self.db.execute("""
                 INSERT INTO exports (created_at, mode, period_from, period_to, fetched_until, kinds,
-                    items_selected, folder, csv_file, prompt_file)
-                VALUES (?,?,?,?,?,?,?,?,?,?)
-            """, (until, "since_last" if mode == "since_last" else "dates", p_from, p_to, until,
-                  ",".join(kinds), len(rows), str(folder), str(csv_path), str(prompt_path)))
+                    items_selected, folder, csv_file, prompt_file, profile)
+                VALUES (?,?,?,?,?,?,?,?,?,?,?)
+            """, (until, "since_last" if mode == "since_last" and not self.slk else "dates", p_from, p_to,
+                  until, ",".join(kinds), len(rows), str(folder), str(csv_path), str(prompt_path),
+                  self.profile))
             eid = int(cur.lastrowid)
             for r in rows:
                 state, dup_of, sim = roles.get(r["id"], ("main", None, None))
                 reason = dropped.get(r["id"])
                 if reason:
                     state = "filtered"
-                self.db.execute("INSERT INTO export_items (export_id, item_id, state, duplicate_of, similarity, reason) "
-                                "VALUES (?,?,?,?,?,?)", (eid, r["id"], state, dup_of, sim, reason))
+                self.db.execute("INSERT INTO export_items (export_id, item_id, state, duplicate_of, similarity, "
+                                "reason, note) VALUES (?,?,?,?,?,?,?)",
+                                (eid, r["id"], state, dup_of, sim, reason, notes.get(r["id"])))
         counts = self.write_csv(eid)
         if log:
             log(f"Готово: {csv_path.name} ({counts['main']} строк), период {p_from} – {p_to}")
         return {**self.get(eid), "prompt": prompt, "info": info}
+
+    def previous_notes(self, item_ids: list[int]) -> dict[int, str]:
+        """СЛК: какие из новостей уже были в прошлых выгрузках СЛК → «дайджест СЛК от 30.10.2026»."""
+        out: dict[int, str] = {}
+        ids = [i for i in item_ids if i]
+        for k in range(0, len(ids), 500):
+            part = ids[k:k + 500]
+            for r in self.db.query(f"""
+                SELECT ei.item_id, MAX(e.created_at) AS at
+                FROM export_items ei JOIN exports e ON e.id = ei.export_id
+                WHERE e.profile = ? AND ei.state IN ('main', 'merged')
+                  AND ei.item_id IN ({','.join('?' * len(part))})
+                GROUP BY ei.item_id""", (self.profile, *part)):
+                d = local_dt(r["at"])
+                out[r["item_id"]] = f"да, выгрузка СЛК от {d.strftime('%d.%m.%Y') if d else '—'}"
+        return out
 
     # ─── проверка выгрузки ───────────────────────────────────────────────────
     @staticmethod
@@ -341,7 +451,10 @@ class ExportService:
         d = local_dt(r["published_at"])
         return {"id": r["id"], "title": r["title"], "source": r["source_name"], "kind": r["kind"],
                 "url": r["url"], "published": d.strftime("%d.%m %H:%M") if d else "",
-                "similarity": r.get("similarity"), "chars": len(full_text(r))}
+                "similarity": r.get("similarity"), "chars": len(full_text(r)),
+                "note": r.get("note") or "",
+                "undated": r.get("date_status") == "none",
+                "date_check": DATE_LABEL.get(r.get("date_status")) if r.get("date_status") in ("page", "card") else ""}
 
     def review(self, export_id: int) -> dict:
         rows = self._export_rows(export_id)
@@ -425,7 +538,8 @@ class ExportService:
         return self.db.one("SELECT * FROM exports WHERE id = ?", (export_id,))
 
     def list(self, limit: int = 30) -> list[dict]:
-        return self.db.query("SELECT * FROM exports ORDER BY id DESC LIMIT ?", (limit,))
+        return self.db.query("SELECT * FROM exports WHERE profile = ? ORDER BY id DESC LIMIT ?",
+                             (self.profile, limit))
 
     def find_result(self, export_id: int) -> Optional[Path]:
         """Самый свежий DOCX, появившийся после подготовки выгрузки: в «Загрузках»
@@ -440,14 +554,21 @@ class ExportService:
         for d in (self.downloads_dir, Path(e["folder"])):
             if not d.is_dir():
                 continue
-            for p in d.glob("*.docx"):
-                try:
-                    st = p.stat()
-                except OSError:
-                    continue
-                if not p.name.startswith("~$") and st.st_mtime >= since and st.st_size > 0 \
-                        and now - st.st_mtime >= 2:
-                    cands.append((st.st_mtime, p))
+            try:
+                entries = os.scandir(d)                    # дешевле glob: без лишних stat
+            except OSError:
+                continue
+            with entries:
+                for de in entries:
+                    name = de.name
+                    if not name.lower().endswith(".docx") or name.startswith("~$"):
+                        continue
+                    try:
+                        st = de.stat()
+                    except OSError:
+                        continue
+                    if st.st_mtime >= since and st.st_size > 0 and now - st.st_mtime >= 2:
+                        cands.append((st.st_mtime, Path(de.path)))
         return max(cands)[1] if cands else None
 
     def attach_result(self, export_id: int, path: Optional[str] = None) -> dict:

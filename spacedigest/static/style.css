@@ -475,7 +475,7 @@ td{padding:10px 14px;vertical-align:top}
 
 /* ─── Модалка пароля на настройки ───────────────────────────────────────────── */
 .modal-ov{position:fixed;inset:0;z-index:200;background:rgba(3,5,10,.66);
-  backdrop-filter:blur(3px);display:flex;align-items:center;justify-content:center}
+  display:flex;align-items:center;justify-content:center}
 .modal{width:340px;max-width:92vw;background:var(--surf2);border:1px solid var(--border2);
   border-radius:var(--r-lg);padding:20px;box-shadow:0 24px 60px rgba(0,0,0,.5)}
 .modal-t{font-family:var(--sans);font-weight:700;font-size:15px;margin-bottom:4px;color:var(--text)}

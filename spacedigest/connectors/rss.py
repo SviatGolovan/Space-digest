@@ -126,8 +126,30 @@ class RssConnector:
                                  "ленту (обычно …/feed/ или …/rss)")
         return parsed
 
+    def _listing(self, source: Source, resp, new_state: SourceState) -> FetchResult:
+        """Страница новостей без RSS → карточки (connectors/html_page.py)."""
+        from .html_page import parse_listing, reject_error_page
+        enc = getattr(resp, "encoding", None)
+        if not enc or enc.lower() == "iso-8859-1":          # requests по умолчанию для text/html без charset
+            try:
+                resp.encoding = getattr(resp, "apparent_encoding", None) or "utf-8"
+            except AttributeError:
+                pass
+        html = resp.text
+        if (err := reject_error_page(html)):
+            raise ConnectorError(err)
+        items = parse_listing(html, getattr(resp, "url", "") or source.url, source.config.get("item_selector", ""))
+        if not items:
+            raise ConnectorError("страница открылась, но новостных карточек на ней не найдено — "
+                                 "проверьте адрес раздела новостей")
+        new_state.resolved_url = "html"
+        new_state.etag = new_state.last_modified = None       # страницы без ленты качаем целиком
+        undated = sum(1 for i in items if i.published_at is None)
+        note = f"страница новостей: карточек {len(items)}" + (f", без даты {undated}" if undated else "")
+        return FetchResult(items=items, state=new_state, note=note)
+
     def fetch(self, source: Source, state: SourceState, log: LogFn = None) -> FetchResult:
-        url = state.resolved_url or source.url
+        url = source.url if state.resolved_url == "html" else (state.resolved_url or source.url)
         if not url:
             raise ConnectorError("у источника не указан адрес")
         resp = self._get(url, state)
@@ -138,6 +160,9 @@ class RssConnector:
 
         note = ""
         if looks_like_html(resp.content[:512]):
+            html_mode = bool(source.config.get("html"))
+            if html_mode and state.resolved_url == "html":
+                return self._listing(source, resp, new_state)
             # По адресу — обычная страница. Ищем ленту и запоминаем её.
             found = None
             for cand in discover_feed_links(resp.text, url)[:6]:
@@ -152,6 +177,10 @@ class RssConnector:
                 except ConnectorError:
                     continue
             if not found:
+                if html_mode:                      # сайт без ленты: разбираем саму страницу
+                    res = self._listing(source, resp, new_state)
+                    res.state.resolved_url = "html"   # в следующий раз ленту не ищем
+                    return res
                 raise ConnectorError("по адресу открывается обычная страница, а найти в ней "
                                      "RSS/Atom-ленту не удалось. Укажите прямой адрес ленты")
             url, resp, parsed = found
